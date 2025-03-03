@@ -23,16 +23,16 @@ function calc_magmom(g::MVEC{3}, spinops::Vector{Matrix{ComplexF64}}, Ep::Vector
 end
 
 
-function cef_magneticmoment_crystal!(cefsys::cef_system, dfcalc::DataFrame; units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magneticmoment_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     unit_factor = mag_units(units)
-    spinops = [cefsys.ion.Jx, cefsys.ion.Jy, cefsys.ion.Jz]
+    spinops = [ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
         @newcol :Mp_CALC::Vector{Float64}
         @newcol :Mx_CALC::Vector{Float64}
         @newcol :My_CALC::Vector{Float64}
         @newcol :Mz_CALC::Vector{Float64}
         extfield = [:Bx, :By, :Bz]
-        E, V = eigen(cef_hamiltonian(cefsys.ion,cefsys.cefparams;B=extfield,method=method))
+        E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
         E .-= minimum(E)
         if iszero(extfield)
             spin_proj = spinops
@@ -46,31 +46,31 @@ function cef_magneticmoment_crystal!(cefsys::cef_system, dfcalc::DataFrame; unit
             end
             spin_expval[i] = thermal_average(Ep=E,Vp=V,op=spinops[i],T=:T,mode=mode)
         end
-        :Mp_CALC=round(norm(cefsys.ion.g .* spin_expval)*unit_factor,digits=SDIG)
-        :Mx_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[1],T=:T,mode=mode)*cefsys.ion.g[1]*unit_factor,digits=SDIG)
-        :My_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[2],T=:T,mode=mode)*cefsys.ion.g[2]*unit_factor,digits=SDIG)
-        :Mz_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[3],T=:T,mode=mode)*cefsys.ion.g[3]*unit_factor,digits=SDIG)
+        :Mp_CALC=round(norm(ion.g .* spin_expval)*unit_factor,digits=SDIG)
+        :Mx_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[1],T=:T,mode=mode)*ion.g[1]*unit_factor,digits=SDIG)
+        :My_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[2],T=:T,mode=mode)*ion.g[2]*unit_factor,digits=SDIG)
+        :Mz_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[3],T=:T,mode=mode)*ion.g[3]*unit_factor,digits=SDIG)
     end
     return nothing
 end
 
 
-function cef_magneticmoment_powder!(cefsys::cef_system, dfcalc::DataFrame; units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magneticmoment_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     unit_factor = mag_units(units)
-    spinops = [cefsys.ion.Jx, cefsys.ion.Jy, cefsys.ion.Jz]
+    spinops = [ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
         @newcol :M_CALC::Vector{Float64}
-        E, V = eigen(cef_hamiltonian(cefsys.ion,cefsys.cefparams; B=[:B,0.0,0.0],method=method))
+        E, V = eigen(cef_hamiltonian(ion,cefparams; B=[:B,0.0,0.0],method=method))
         E .-= minimum(E)
-        MX = calc_magmom(cefsys.ion.g,spinops .* [1.0, 0.0, 0.0],E,V,:T,mode)
+        MX = calc_magmom(ion.g,spinops .* [1.0, 0.0, 0.0],E,V,:T,mode)
 
-        E, V = eigen(cef_hamiltonian(cefsys.ion,cefsys.cefparams; B=[0.0,:B,0.0],method=method))
+        E, V = eigen(cef_hamiltonian(ion,cefparams; B=[0.0,:B,0.0],method=method))
         E .-= minimum(E)
-        MY = calc_magmom(cefsys.ion.g,spinops .* [0.0, 1.0, 0.0],E,V,:T,mode)
+        MY = calc_magmom(ion.g,spinops .* [0.0, 1.0, 0.0],E,V,:T,mode)
 
-        E, V = eigen(cef_hamiltonian(cefsys.ion,cefsys.cefparams; B=[0.0,0.0,:B],method=method))
+        E, V = eigen(cef_hamiltonian(ion,cefparams; B=[0.0,0.0,:B],method=method))
         E .-= minimum(E)
-        MZ = calc_magmom(cefsys.ion.g,spinops .* [0.0, 0.0, 1.0],E,V,:T,mode)
+        MZ = calc_magmom(ion.g,spinops .* [0.0, 0.0, 1.0],E,V,:T,mode)
 
         :M_CALC=round(((MX + MY + MZ) / 3.0) * unit_factor,digits=SDIG)
     end

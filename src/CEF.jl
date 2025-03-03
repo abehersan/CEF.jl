@@ -40,7 +40,6 @@ export blm_dframe
 export get_alm!
 
 include("./cef_system.jl")
-export cef_system
 export cef_diagonalization
 export cef_hamiltonian
 export stevens_EO, stevens_O
@@ -57,5 +56,9 @@ export cef_entropy_speclevels!
 include("./cef_magnetization.jl")
 export cef_magneticmoment_crystal!
 export cef_magneticmoment_powder!
+
+include("./cef_susceptibility.jl")
+export cef_susceptibility_crystal!
+export cef_susceptibility_powder!
 
 end

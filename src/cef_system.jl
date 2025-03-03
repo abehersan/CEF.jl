@@ -1,42 +1,28 @@
-Base.@kwdef mutable struct cef_system
-    ion::mag_ion
-    cefparams::DataFrame
-    B::Vector{Float64}
-    H::HERMITIANC64
-    E::Vector{Float64}
-    V::Matrix{ComplexF64}
-end
+@doc raw"""
+    cef_eigensystem(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3))::Nothing
 
+Display CEF matrix diagonalization results. Useful in cases where a quick
+view of the CEF energy spectrum is desired.
 
-function Base.show(io::IO, ::MIME"text/plain", cefsys::cef_system)
-    printstyled(io, "CEF matrix diagonalization results.\n\n", color=:underline, bold=true)
-    display(cefsys.ion)
-    println()
-    println("CEF parameters in (meV):")
-    println(cefsys.cefparams)
-    println()
-    println(io,"Diagonal g-tensor [gxx, gyy, gzz]: $(cefsys.ion.g).\n")
-    println(io,"External magnetic field in (Tesla) [Bx, By, Bz]: $(cefsys.B)\n")
-    println(io,"CEF energy levels in (meV) and in (Kelvin):")
-    E=cefsys.E
+Details of the magnetic ion, the CEF parameters and applied field are displayed.
+"""
+function cef_eigensystem(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
+    cef_matrix = cef_hamiltonian(ion,cefparams;B=B,method=method)
+    @assert ishermitian(cef_matrix)
+    E = eigvals(cef_matrix)
+    E .-= minimum(E)
+    printstyled("CEF matrix diagonalization results.\n\n", color=:underline, bold=true)
+    display(ion)
+    println("Diagonal g-tensor [gxx, gyy, gzz]: $(ion.g).\n")
+    println("External magnetic field in Tesla [Bx, By, Bz]: $B\n")
+    println("CEF energy levels in meV and in Kelvin:")
     for i in eachindex(E)
         Emev = round(E[i], digits=SDIG)
         EK = round(E[i]/meV_per_K, digits=SDIG)
         Es = Emev, EK
-        println(io,join(Es, ",\t"))
+        println(join(Es, ",\t"))
     end
     return nothing
-end
-
-
-function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::cef_system
-    cef_matrix = cef_hamiltonian(ion, cefparams; B=B, method=method)
-    @assert ishermitian(cef_matrix)
-    E,V = eigen(cef_matrix)
-    E .-= minimum(E)
-    return cef_system(
-        ion,cefparams,B,cef_matrix,E,V
-    )
 end
 
 
