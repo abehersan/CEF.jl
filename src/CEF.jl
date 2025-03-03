@@ -50,4 +50,8 @@ export partition_function
 export population_factor
 export thermal_average
 
+include("./cef_entropy.jl")
+export cef_entropy!
+export cef_entropy_speclevels!
+
 end
