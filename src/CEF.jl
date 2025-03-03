@@ -61,4 +61,8 @@ include("./cef_susceptibility.jl")
 export cef_susceptibility_crystal!
 export cef_susceptibility_powder!
 
+include("./cef_neutronxsection.jl")
+export cef_neutronxsection_crystal!
+export cef_neutronxsection_powder!
+
 end

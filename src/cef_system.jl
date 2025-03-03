@@ -1,12 +1,4 @@
-@doc raw"""
-    cef_eigensystem(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3))::Nothing
-
-Display CEF matrix diagonalization results. Useful in cases where a quick
-view of the CEF energy spectrum is desired.
-
-Details of the magnetic ion, the CEF parameters and applied field are displayed.
-"""
-function cef_eigensystem(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
+function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
     cef_matrix = cef_hamiltonian(ion,cefparams;B=B,method=method)
     @assert ishermitian(cef_matrix)
     E = eigvals(cef_matrix)
@@ -14,8 +6,8 @@ function cef_eigensystem(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=z
     printstyled("CEF matrix diagonalization results.\n\n", color=:underline, bold=true)
     display(ion)
     println("Diagonal g-tensor [gxx, gyy, gzz]: $(ion.g).\n")
-    println("External magnetic field in Tesla [Bx, By, Bz]: $B\n")
-    println("CEF energy levels in meV and in Kelvin:")
+    println("External magnetic field in (Tesla) [Bx, By, Bz]: $B\n")
+    println("CEF energy levels in (meV) and in (K):")
     for i in eachindex(E)
         Emev = round(E[i], digits=SDIG)
         EK = round(E[i]/meV_per_K, digits=SDIG)
