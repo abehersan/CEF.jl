@@ -78,7 +78,7 @@ end
 function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
-    E, V = eigen(cef_hamiltonian(ion,bfactors;method=method))
+    E, V = eigen(cef_hamiltonian(ion,cefparams;method=method))
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
