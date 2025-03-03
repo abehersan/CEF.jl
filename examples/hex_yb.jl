@@ -8,12 +8,11 @@ using DataFrames
 using StatsPlots
 
 
-ion = single_ion("Yb3+")
-bfactors = blm_dframe(Dict("B20"=>0.5622, "B40"=>1.6087e-5,
-                           "B60"=>6.412e-7, "B66"=>-8.324e-6))
-
-
 function main()
+
+    ion = single_ion("Yb3+")
+    bfactors = blm_dframe(Dict("B20"=>0.5622, "B40"=>1.6087e-5,
+                            "B60"=>6.412e-7, "B66"=>-8.324e-6))
 
     """ INS X-section """
     temps = [10.0, 50.0, 200.0]
@@ -23,7 +22,6 @@ function main()
         cef_neutronxsection_powder!(ion, bfactors, calc_grid)
         @df calc_grid plot!(ins_plot, :EN, :I_CALC, label="T=$t K")
     end
-
 
     """ Magnetic moment """
     mag_plot = plot(xlabel="Magnetic Field [Tesla]", ylabel="Magnetic Moment (muB)")
@@ -36,7 +34,6 @@ function main()
     @df calc_grid plot!(mag_plot, :Bx, :Mp_CALC, label="B parallel x")
     ylims!(mag_plot, 0, 3.5)
 
-
     """ Static susceptibility """
     chi_plot = plot(xlabel="Temperature [K]", ylabel="1/chi (emu/mol)")
     calc_grid_z = DataFrame(T=1.5:0.5:300, Bx=0.0, By=0.0, Bz=0.01)
@@ -48,9 +45,6 @@ function main()
     calc_grid_powd = DataFrame(T=1.5:0.5:300)
     cef_susceptibility_powder!(ion, bfactors, calc_grid_powd, units=:CGS)
     @df calc_grid_powd plot!(chi_plot, :T, 1 ./ :CHI_CALC, label="Powder")
-    # chi_powd = 1/3*calc_grid_z.CHI_CALC + 2/3*calc_grid_x.CHI_CALC
-    # plot!(chi_plot, calc_grid_z.T, 1 ./ chi_powd, label="Powder")
-
 
     """ Specific heat capacity and magnetic entropy """
     s_plot = plot(xlabel="Temperature [K]", ylabel="S, HC (J/mol/K)")

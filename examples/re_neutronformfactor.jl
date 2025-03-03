@@ -11,6 +11,7 @@ using StatsPlots
 
 
 function main()
+
     mag_ions = [
         "Ce3+", "Pr3+", "Nd3+", "Sm3+", "Tb3+", "Dy3+", "Ho3+", "Er3+", "Tm3+", "Yb3+"
     ]
@@ -22,7 +23,7 @@ function main()
     for i in eachindex(mag_ions)
         ion = single_ion(mag_ions[i])
         lbl = "Ion: $(ion.ion), J: $(ion.J)"
-        FSQUARED = abs2.(broadcast(q->dipolar_formfactor(ion, q), QS))
+        FSQUARED = abs2.(broadcast(q->CEF.dipolar_formfactor(ion, q), QS))
         plt = plot(xlims=(0, 15))#, ylims=(0, 1.5))
         plot!(QS, FSQUARED, label=lbl, c=c)
         push!(plts, plt)
