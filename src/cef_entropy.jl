@@ -32,7 +32,7 @@ function cef_entropy!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; uni
         E .-= minimum(E)
         :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
     end
-    dfcalc[:,:SM_CALC]=round(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
+    dfcalc[:,:SM_CALC]=round.(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
     return nothing
 end
 
@@ -48,6 +48,6 @@ function cef_entropy_speclevels!(ion::mag_ion, cefparams::DataFrame, dfcalc::Dat
         E=E[levels]
         :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
     end
-    dfcalc[:,:SM_CALC]=round(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
+    dfcalc[:,:SM_CALC]=round.(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
     return nothing
 end
