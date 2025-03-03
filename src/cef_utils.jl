@@ -1,9 +1,3 @@
-@doc raw"""
-    blm_dframe(blm_dict::Dict{String, <:Real})::DataFrame
-
-Given a dictionary of Stevens coefficients of the form Blm -> Value, return
-a DataFrame with equivalent information.
-"""
 function blm_dframe(blm_dict::Dict{String, <:Real})::DataFrame
     l = Int[]
     m = Int[]

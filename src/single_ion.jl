@@ -79,24 +79,6 @@ const re_hundsrules = Dict(
 )
 
 
-@doc raw"""
-    single_ion(ion::String)
-
-Given a magnetic ion name, generate a `mag_ion` struct that contains
-the following data:
-
-- Total angular momentum quantum number J, isotropic Landé-factor gJ
-- Stevens geometric factors θ_l, α, β, γ
-- Expectation value of radial wave functions <r^l>, l={2, 4, 6}
-- Magnetic form factor coefficients
-
-Currently only trivalent rare-earth ions are supported.
-See `custom_spin` if other ions are required.
-
-Coefficients taken from Rotter Bauer (2010),
-the McPhase online manual: https://mcphase.github.io/webpage/manual/node129.html
-and Brown's coefficients https://www.ill.eu/sites/ccsl/ffacts/ffactnode1.html
-"""
 function single_ion(ion::String)
     try
         J, g,
@@ -175,15 +157,6 @@ function Base.show(io::IO, ::MIME"text/plain", ion::mag_ion)
 end
 
 
-@doc raw"""
-    spin_operators(J::Float64, a::String)::Matrix{ComplexF64}
-
-Explicit matrices for spin operators of given total angular momentum
-quantum number `J`.
-The string `a` is one of either `x`, `y`, `z` for the Cartesian spin-operators.
-If `a` is either `+` or `-` explicit matrices for the ladder operators
-are returned.
-"""
 function spin_operators(J::Float64, a::String)::Matrix{ComplexF64}
     mJ = -J:1:J
     if isequal(a, "x")

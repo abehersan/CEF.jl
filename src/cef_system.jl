@@ -29,14 +29,6 @@ function Base.show(io::IO, ::MIME"text/plain", cefsys::cef_system)
 end
 
 
-@doc raw"""
-    cef_diagonalization(ion::mag_ion, bfactors::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::cef_system
-
-Display the CEF matrix diagonalization results, the effect of an external magnetic field `B` is modeled with a `Jz` (`Sz`) operator.
-Returns `cef_system` struct with the result of the calculation.
-Two calculation `methods` are implemented. `:EO`, which uses the efficient algorithm due to Rudowicz and Ryabov.
-And `:O`, which calculates the Stevens operators via a lookup table.
-"""
 function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::cef_system
     cef_matrix = cef_hamiltonian(ion, cefparams; B=B, method=method)
     @assert ishermitian(cef_matrix)
@@ -48,16 +40,6 @@ function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Rea
 end
 
 
-@doc raw"""
-    cef_hamiltonian(ion::mag_ion, bfactors::DataFrame; B::Vector{<:Real}=zeros(Float64, 3))::HERMITIANC64
-
-Compute full Hamiltonian matrix given CEF parameters.
-The matrix is outputted in the basis of CEF |J, mJ> wavefunctions with
-mJ=-J, -J+1, ... J-1, J.
-
-If a magnetic field `B` is included, a Zeeman term is added to the Hamiltonian
-where the g-factor of the ion `ion.g` is taken into account.
-"""
 function cef_hamiltonian(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::HERMITIANC64
     if iszero(B)
         return H_cef(ion, cefparams, method)
@@ -67,18 +49,6 @@ function cef_hamiltonian(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=z
 end
 
 
-@doc raw"""
-    cef_hamiltonian(ion::mag_ion, D::Real, E::Real; B::Vector{<:Real}=zeros(Float64, 3))::HERMITIANC64
-
-Compute full Hamiltonian matrix given effective anisotropy parameters `D` and `E`.
-
-The Hamiltonian is given by: D Jz^2 + E/2(Jp^2 + Jm^2).
-The matrix is outputted in the basis of CEF |J, mJ> wavefunctions with
-mJ=-J, -J+1, ... J-1, J.
-
-If a magnetic field `B` is included, a Zeeman term is added to the Hamiltonian
-where the g-factor of the ion `ion.g` is taken into account.
-"""
 function cef_hamiltonian(ion::mag_ion, D::Real, E::Real; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::HERMITIANC64
     m_dim = Int(2*ion.J+1)
     h_cef = zeros(ComplexF64, (m_dim, m_dim))
@@ -161,14 +131,6 @@ function ryabov_clm(l::Int, m::Int)::Float64
 end
 
 
-@doc raw"""
-    stevens_EO(J::Real, l::Int, m::Int)::HERMITIANC64
-
-Returns the explicit matrix for the `m` extended Stevens operator of rank `l`
-for a given total angular momentum quantum number `J`.
-A maximum rank of `l=7` is supported.
-`m` is in the range `-l:1:l`.
-"""
 function stevens_EO(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
     T = ion.Jp^l # T^l_l
     for _ in l-1:-1:abs(m) # Eqn (1 and 2) of Ryabov (1999), see Stoll EasySpin
@@ -185,14 +147,6 @@ function stevens_EO(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
 end
 
 
-@doc raw"""
-    stevens_O(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
-
-Tabulated version of the Stevens EO by Martin Rotter in the McPhase manual
-These resulting matrices for l in [2, 4, 6] and m = -l:1:l for J in 0.5:0.5:7.5
-are equivalent to those generated programmatically with the algorithm of
-Ryabov and Rudowicz
-"""
 function stevens_O(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
     J=ion.J
     m_dim = Int(2*J+1)
