@@ -30,9 +30,9 @@ function cef_entropy!(cefsys::cef_system, dfcalc::DataFrame; units::Symbol=:SI, 
         B=[:Bx,:By,:Bz]
         E=eigvals(cef_hamiltonian(cefsys.ion,cefsys.cefparams;B=B,method=method))
         E .-= minimum(E)
-        :HC_CALC=mag_heatcap(E,:T)*convfac
+        :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
     end
-    dfcalc[:,:SM_CALC] = mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T])
+    dfcalc[:,:SM_CALC]=round(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
     return nothing
 end
 
@@ -47,8 +47,8 @@ function cef_entropy_speclevels!(cefsys::cef_system, dfcalc::DataFrame;
         E=eigvals(cef_hamiltonian(cefsys.ion,cefsys.cefparams;B=B,method=method))
         E .-= minimum(E)
         E=E[levels]
-        :HC_CALC=mag_heatcap(E,:T)*convfac
+        :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
     end
-    dfcalc[:,:SM_CALC] = mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T])
+    dfcalc[:,:SM_CALC]=round(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
     return nothing
 end

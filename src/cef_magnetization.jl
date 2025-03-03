@@ -46,10 +46,10 @@ function cef_magneticmoment_crystal!(cefsys::cef_system, dfcalc::DataFrame; unit
             end
             spin_expval[i] = thermal_average(Ep=E,Vp=V,op=spinops[i],T=:T,mode=mode)
         end
-        :Mp_CALC = norm(cefsys.ion.g .* spin_expval)*unit_factor
-        :Mx_CALC = thermal_average(Ep=E,Vp=V,op=spinops[1],T=:T,mode=mode)*cefsys.ion.g[1]*unit_factor
-        :My_CALC = thermal_average(Ep=E,Vp=V,op=spinops[2],T=:T,mode=mode)*cefsys.ion.g[2]*unit_factor
-        :Mz_CALC = thermal_average(Ep=E,Vp=V,op=spinops[3],T=:T,mode=mode)*cefsys.ion.g[3]*unit_factor
+        :Mp_CALC=round(norm(cefsys.ion.g .* spin_expval)*unit_factor,digits=SDIG)
+        :Mx_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[1],T=:T,mode=mode)*cefsys.ion.g[1]*unit_factor,digits=SDIG)
+        :My_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[2],T=:T,mode=mode)*cefsys.ion.g[2]*unit_factor,digits=SDIG)
+        :Mz_CALC=round(thermal_average(Ep=E,Vp=V,op=spinops[3],T=:T,mode=mode)*cefsys.ion.g[3]*unit_factor,digits=SDIG)
     end
     return nothing
 end
@@ -72,7 +72,7 @@ function cef_magneticmoment_powder!(cefsys::cef_system, dfcalc::DataFrame; units
         E .-= minimum(E)
         MZ = calc_magmom(cefsys.ion.g,spinops .* [0.0, 0.0, 1.0],E,V,:T,mode)
 
-        :M_CALC = ((MX + MY + MZ) / 3.0) * unit_factor
+        :M_CALC=round(((MX + MY + MZ) / 3.0) * unit_factor,digits=SDIG)
     end
     return nothing
 end
