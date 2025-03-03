@@ -65,4 +65,7 @@ include("./cef_neutronxsection.jl")
 export cef_neutronxsection_crystal!
 export cef_neutronxsection_powder!
 
+include("./cef_rotation.jl")
+export rotate_blm
+
 end
