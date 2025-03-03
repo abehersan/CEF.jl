@@ -45,4 +45,9 @@ export cef_diagonalization
 export cef_hamiltonian
 export stevens_EO, stevens_O
 
+include("./thermodynamical_quantities.jl")
+export partition_function
+export population_factor
+export thermal_average
+
 end
