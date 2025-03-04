@@ -53,7 +53,7 @@ function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        :CHI_CALC=norm([
+        :CHI_CALC=sum([
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[1],T=:T,mode=mode),
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[2],T=:T,mode=mode),
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[3],T=:T,mode=mode)
@@ -70,9 +70,9 @@ function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        chix = calc_chialphaalpha(op_alpha=spin_ops[1],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
-        chiy = calc_chialphaalpha(op_alpha=spin_ops[2],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
-        chiz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
+        chix = calc_chialphaalpha(op_alpha=spin_ops[1],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        chiy = calc_chialphaalpha(op_alpha=spin_ops[2],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        chiz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
         :CHI_CALC=round(((chix+chiy+chiz)/3),digits=SDIG)
     end
     return nothing
