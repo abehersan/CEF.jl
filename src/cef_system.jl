@@ -5,7 +5,7 @@ function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Rea
     E .-= minimum(E)
     printstyled("CEF matrix diagonalization results.\n\n", color=:underline, bold=true)
     display(ion)
-    println("Diagonal g-tensor [gxx, gyy, gzz]: $(ion.g).\n")
+    println("Landé g-factor: $(ion.gj)\n")
     println("External magnetic field in (Tesla) [Bx, By, Bz]: $B\n")
     println("CEF energy levels in (meV) and in (K):")
     for i in eachindex(E)
@@ -42,11 +42,10 @@ end
 
 function H_zeeman(ion::mag_ion, extfield::Vector{<:Real})::HERMITIANC64
     Bx, By, Bz = extfield
-    gxx, gyy, gzz = ion.g
-    gxxBxJx = (gxx * Bx) * ion.Jx
-    gyyByJy = (gyy * By) * ion.Jy
-    gzzBzJz = (gzz * Bz) * ion.Jz
-    zeeman_matrix = (-1.0 * muB) * (gxxBxJx .+ gyyByJy .+ gzzBzJz)
+    gjBxJx = (ion.gj*Bx)*ion.Jx
+    gjByJy = (ion.gj*By)*ion.Jy
+    gjBzJz = (ion.gj*Bz)*ion.Jz
+    zeeman_matrix = (-1.0 * muB) * (gjBxJx .+ gjByJy .+ gjBzJz)
     return Hermitian(zeeman_matrix)
 end
 
