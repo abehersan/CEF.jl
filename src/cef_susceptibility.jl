@@ -52,7 +52,7 @@ function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        :CHI_CALC=sum([
+        :CHI_CALC=norm([
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_ops[1],T=:T,mode=mode),
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_ops[2],T=:T,mode=mode),
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_ops[3],T=:T,mode=mode)
