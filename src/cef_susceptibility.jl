@@ -44,32 +44,20 @@ function calc_chialphaalpha(; op_alpha::Matrix{ComplexF64}, Ep::Vector{Float64},
 end
 
 
-function calc_chi(g::MVEC{3}; spin_proj::Vector{Matrix{ComplexF64}}, Ep::Vector{Float64}, Vp::Matrix{ComplexF64}, T::Real, mode::Function)::Float64
-    chi_vec = zeros(Float64, 3)
-    @inbounds for i in eachindex(spin_proj)
-        if iszero(spin_proj[i])
-            continue
-        else
-            chi_vec[i]=calc_chialphaalpha(op_alpha=spin_proj[i],Ep=Ep,Vp=Vp,T=T,mode=mode)
-        end
-    end
-    return norm((g .^2) .* chi_vec)
-end
-
-
 function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
     extfield = [mean(dfcalc.Bx), mean(dfcalc.By), mean(dfcalc.Bz)]
+    spin_proj = spin_ops .* normalize(extfield)
     E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
     E .-= minimum(E)
     @eachrow! dfcalc begin
-        @newcol :CHIx_CALC::Vector{Float64}
-        @newcol :CHIy_CALC::Vector{Float64}
-        @newcol :CHIz_CALC::Vector{Float64}
-        :CHIx_CALC=round(calc_chi(ion.g,spin_proj=spin_ops.*[1.0,0.0,0.0],Ep=E,Vp=V,T=:T,mode=mode)*unit_factor,digits=SDIG)
-        :CHIy_CALC=round(calc_chi(ion.g,spin_proj=spin_ops.*[0.0,1.0,0.0],Ep=E,Vp=V,T=:T,mode=mode)*unit_factor,digits=SDIG)
-        :CHIz_CALC=round(calc_chi(ion.g,spin_proj=spin_ops.*[0.0,0.0,1.0],Ep=E,Vp=V,T=:T,mode=mode)*unit_factor,digits=SDIG)
+        @newcol :CHI_CALC::Vector{Float64}
+        :CHI_CALC=norm([
+                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[1],T=:T,mode=mode),
+                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[2],T=:T,mode=mode),
+                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[3],T=:T,mode=mode)
+            ])*ion.gj^2*unit_factor
     end
     return nothing
 end
@@ -82,9 +70,9 @@ function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        chix = calc_chi(ion.g,spin_proj=spin_ops.*[1.0,0.0,0.0],Ep=E,Vp=V,T=:T,mode=mode)*unit_factor
-        chiy = calc_chi(ion.g,spin_proj=spin_ops.*[0.0,1.0,0.0],Ep=E,Vp=V,T=:T,mode=mode)*unit_factor
-        chiz = calc_chi(ion.g,spin_proj=spin_ops.*[0.0,0.0,1.0],Ep=E,Vp=V,T=:T,mode=mode)*unit_factor
+        chix = calc_chialphaalpha(op_alpha=spin_ops[1],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
+        chiy = calc_chialphaalpha(op_alpha=spin_ops[2],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
+        chiz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
         :CHI_CALC=round(((chix+chiy+chiz)/3),digits=SDIG)
     end
     return nothing

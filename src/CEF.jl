@@ -66,6 +66,7 @@ export cef_neutronxsection_crystal!
 export cef_neutronxsection_powder!
 
 include("./cef_rotation.jl")
+export get_euler_angles
 export rotate_blm
 
 end

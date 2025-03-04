@@ -94,7 +94,8 @@ function single_ion(ion::String)
                 spin_operators(J, "+"),
                 spin_operators(J, "-"),
                 spin_operators(J, "z"),
-                [g, g, g],
+                g,
+                MAT3(diagm([g,g,g])),
                 [alpha, beta, gamma],
                 [r2, r4, r6],
                 C2,
@@ -120,7 +121,8 @@ function custom_ion(S::Real, g::Real, C2::Real)::mag_ion
         Jz=spin_operators(S,"z"),
         Jp=spin_operators(S,"+"),
         Jm=spin_operators(S,"-"),
-        g=[g,g,g],
+        gj=g,
+        g=MAT3(zeros(3,3)),
         stevens_factors=zeros(3),
         rad_wavefunction=zeros(3),
         C2=C2,
@@ -138,7 +140,8 @@ Base.@kwdef mutable struct mag_ion
     Jp::Matrix{ComplexF64}
     Jm::Matrix{ComplexF64}
     Jz::Matrix{ComplexF64}
-    g::MVEC{3}
+    gj::Float64
+    g::MAT3
     stevens_factors::VEC{3}
     rad_wavefunction::VEC{3}
     C2::Float64
