@@ -70,10 +70,10 @@ function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        chix = calc_chialphaalpha(op_alpha=spin_ops[1],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
-        chiy = calc_chialphaalpha(op_alpha=spin_ops[2],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
-        chiz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
-        :CHI_CALC=round(((chix+chiy+chiz)/3),digits=SDIG)
+        chixx = calc_chialphaalpha(op_alpha=spin_ops[1],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        chiyy = calc_chialphaalpha(op_alpha=spin_ops[2],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        chizz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        :CHI_CALC=(chixx+chiyy+chizz)/3
     end
     return nothing
 end
