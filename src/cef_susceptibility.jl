@@ -48,15 +48,16 @@ function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
     extfield = [mean(dfcalc.Bx), mean(dfcalc.By), mean(dfcalc.Bz)]
+    spin_proj = spin_ops .* normalize(extfield)
     E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
         :CHI_CALC=norm([
-                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_ops[1],T=:T,mode=mode),
-                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_ops[2],T=:T,mode=mode),
-                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_ops[3],T=:T,mode=mode)
-            ])*ion.gj*unit_factor
+                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[1],T=:T,mode=mode),
+                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[2],T=:T,mode=mode),
+                calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[3],T=:T,mode=mode)
+            ])*ion.gj^2*unit_factor
     end
     return nothing
 end
