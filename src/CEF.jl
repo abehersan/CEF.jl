@@ -13,11 +13,11 @@ const SDIG::Int64 = 7           # for numerical cutoffs
 
 # static vector/array definitions
 const VEC3 = SVector{3, Float64}
-const MAT3 = SMatrix{3, 3, Float64, 9}
+const MAT3 = MMatrix{3, 3, Float64, 9}
 const VEC{N} = SVector{N, Float64}
 const MVEC{N} = MVector{N, Float64}
 const CVEC{N} = SVector{N, ComplexF64}
-const CMAT{N} = SMatrix{N, N, ComplexF64}
+const CMAT{N} = MMatrix{N, N, ComplexF64}
 const HERMITIANC64 = Hermitian{ComplexF64, Matrix{ComplexF64}}
 
 # physical constants
@@ -68,5 +68,8 @@ export cef_neutronxsection_powder!
 include("./cef_rotation.jl")
 export get_euler_angles
 export rotate_blm
+
+include("./cef_rpa.jl")
+export calc_chi0
 
 end

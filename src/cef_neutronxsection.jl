@@ -121,14 +121,6 @@ function cef_neutronxsection_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc:
 end
 
 
-@doc raw"""
-    TAS_resfunc(E::Float64, Epeak::Float64, width::Function=x->0.2/(2*sqrt(2*log(2))))::Float64
-
-Default resolution function.
-This function evaluates a normalized Gaussian profile centered at `Epeak`.
-The width of the peak is a function of `E`.
-In this default, it is assumed constant and given by `width`.
-"""
 function TAS_resfunc(E::Float64, Epeak::Float64, width::Function=x->0.2/(2*sqrt(2*log(2))))::Float64
     return gaussian(x=E, mu=Epeak, A=1.0, sigma=width(E))
 end
