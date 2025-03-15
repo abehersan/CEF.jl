@@ -11,7 +11,7 @@ function mag_units(units::Symbol)::Float64
 end
 
 
-function cef_magneticmoment_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame, T::Real; units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magneticmoment_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     unit_factor=mag_units(units)
     spinops=[ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
@@ -29,7 +29,7 @@ function cef_magneticmoment_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
 end
 
 
-function cef_magneticmoment_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame, T::Real; units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magneticmoment_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     unit_factor = mag_units(units)
     spinops = [ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
