@@ -44,11 +44,10 @@ function calc_chialphaalpha(; op_alpha::Matrix{ComplexF64}, Ep::Vector{Float64},
 end
 
 
-function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
+function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame, B::Vector{Real}; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
-    extfield = [mean(dfcalc.Bx), mean(dfcalc.By), mean(dfcalc.Bz)]
-    spin_proj = spin_ops .* normalize(extfield)
+    spin_proj = spin_ops .* normalize(B)
     E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
     E .-= minimum(E)
     @eachrow! dfcalc begin
