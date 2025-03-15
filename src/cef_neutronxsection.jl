@@ -102,7 +102,7 @@ function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc
     Q = [mean(dfcalc.Qx), mean(dfcalc.Qy), mean(dfcalc.Qz)]
     NINT = calc_neutronspectrum_xtal(ion,E,V,Q,T)
     EN = dfcalc.EN
-    II = simulate_Escan(NINT, EN, resfunc)
+    II = round.(simulate_Escan(NINT, EN, resfunc),digits=SDIG)
     dfcalc[!, :I_CALC] = II
     return nothing
 end
@@ -115,7 +115,7 @@ function cef_neutronxsection_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc:
     Q = mean(dfcalc.Q)
     NINT = calc_neutronspectrum_powd(ion,E,V,Q,T)
     EN = dfcalc.EN
-    II = simulate_Escan(NINT, EN, resfunc)
+    II = round.(simulate_Escan(NINT, EN, resfunc),digits=SDIG)
     dfcalc[!, :I_CALC] = II
     return nothing
 end
