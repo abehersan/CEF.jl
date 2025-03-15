@@ -32,26 +32,25 @@ function main()
     ylims!(mag_plot, 0, 3.5)
 
     """ Static susceptibility """
-    chi_plot = plot(xlabel="T (K)", ylabel="1/chi (emu/mol)")
-    TT=range(0,300,100)
+    chi_plot = plot(xlabel="T (K)", ylabel="1/χ (emu/mol)")
+    TT=range(1,300,100)
     dfcalc = DataFrame(T=TT)
-    cef_susceptibility_crystal!(ion, bfactors, dfcalc; B=[0.0,0.0,1.0], units=:CGS)
+    cef_susceptibility_crystal!(ion, bfactors, dfcalc; B=[0.0,0.0,0.1], units=:CGS)
     @df dfcalc plot!(chi_plot, :T, 1 ./ :CHI_CALC, label="B parallel z")
-    cef_susceptibility_crystal!(ion, bfactors, dfcalc; B=[1.0,0.0,0.0], units=:CGS)
+    cef_susceptibility_crystal!(ion, bfactors, dfcalc; B=[0.1,0.0,0.0], units=:CGS)
     @df dfcalc plot!(chi_plot, :T, 1 ./ :CHI_CALC, label="B parallel x")
     cef_susceptibility_powder!(ion, bfactors, dfcalc, units=:CGS)
     @df dfcalc plot!(chi_plot, :T, 1 ./ :CHI_CALC, label="Powder")
-    display(chi_plot)
 
-    # """ Specific heat capacity and magnetic entropy """
-    # s_plot = plot(xlabel="Temperature [K]", ylabel="S, HC (J/mol/K)")
-    # calc_grid = DataFrame(T=0.5:0.5:300, Bx=0.0, By=0.0, Bz=0.0)
-    # cef_entropy!(ion, bfactors, calc_grid)
-    # @df calc_grid plot!(s_plot, :T, :HC_CALC, label="HC")
-    # @df calc_grid plot!(s_plot, :T, :SM_CALC, label="SM")
+    """ Specific heat capacity and magnetic entropy """
+    s_plot = plot(xlabel="T (K)", ylabel="S, HC (J/mol/K)")
+    calc_grid = DataFrame(T=0.5:0.5:300, Bx=0.0, By=0.0, Bz=0.0)
+    cef_entropy!(ion, bfactors, calc_grid)
+    @df calc_grid plot!(s_plot, :T, :HC_CALC, label="HC")
+    @df calc_grid plot!(s_plot, :T, :SM_CALC, label="SM")
 
-    # plt = plot(ins_plot, mag_plot, chi_plot, s_plot, layout=(2, 2), size=(1080, 720))
-    # display(plt)
+    plt = plot(ins_plot, mag_plot, chi_plot, s_plot, layout=(2, 2), size=(1080, 720))
+    display(plt)
     return nothing
 end
 
