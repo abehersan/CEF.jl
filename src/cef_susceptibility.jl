@@ -44,7 +44,7 @@ function calc_chialphaalpha(; op_alpha::Matrix{ComplexF64}, Ep::Vector{Float64},
 end
 
 
-function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame, B::Vector{Real}; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
+function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}, units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
     spin_proj = spin_ops .* normalize(B)
