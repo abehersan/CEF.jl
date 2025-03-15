@@ -13,7 +13,7 @@ function main()
 
     """ INS X-section """
     temps = [10.0, 50.0, 200.0]
-    ins_plot = plot(xlabel="E (meV)", ylabel="I(Q, E) (arb. u.)")
+    ins_plot = plot(xlabel="E (meV)", ylabel="I(Q, E) (arb. u.)", legend=:topleft)
     dfcalc = DataFrame(EN=range(-12,12,100))
     for t in temps
         cef_neutronxsection_powder!(ion,bfactors,dfcalc;Q=2.55,T=t)
@@ -44,13 +44,14 @@ function main()
 
     """ Specific heat capacity and magnetic entropy """
     s_plot = plot(xlabel="T (K)", ylabel="S, HC (J/mol/K)")
-    calc_grid = DataFrame(T=0.5:0.5:300, Bx=0.0, By=0.0, Bz=0.0)
-    cef_entropy!(ion, bfactors, calc_grid)
-    @df calc_grid plot!(s_plot, :T, :HC_CALC, label="HC")
-    @df calc_grid plot!(s_plot, :T, :SM_CALC, label="SM")
+    dfcalc = DataFrame(T=0.5:0.5:300)
+    cef_entropy!(ion, bfactors, dfcalc)
+    @df dfcalc plot!(s_plot, :T, :HC_CALC, label="HC")
+    @df dfcalc plot!(s_plot, :T, :SM_CALC, label="SM")
 
-    plt = plot(ins_plot, mag_plot, chi_plot, s_plot, layout=(2, 2), size=(1080, 720))
+    plt = plot(ins_plot, mag_plot, chi_plot, s_plot, layout=(2, 2), size=(720, 720))
     display(plt)
+
     return nothing
 end
 
