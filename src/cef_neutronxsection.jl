@@ -94,8 +94,7 @@ function simulate_Escan(NXS::Vector{VEC{2}}, Es::AbstractVector, R::Function=TAS
 end
 
 
-function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame,
-    Q::Vector{Real}, T::Real=1.0, B::Vector{Real}=[0.0,0.0,0.0]; resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; Q::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
     E, V = eigen(cef_hamiltonian(ion,cefparams,B=B,method=method))
     E .-= minimum(E)
     NINT = calc_neutronspectrum_xtal(ion,E,V,Q,T)
@@ -106,7 +105,7 @@ function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc
 end
 
 
-function cef_neutronxsection_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame, Q::Real, T::Real=1.0; resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+function cef_neutronxsection_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; Q::Real, T::Real=1.0, resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
     E, V = eigen(cef_hamiltonian(ion,cefparams;method=method))
     E .-= minimum(E)
     NINT = calc_neutronspectrum_powd(ion,E,V,Q,T)
