@@ -1,4 +1,4 @@
-function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
+function print_cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
     cef_matrix = cef_hamiltonian(ion,cefparams;B=B,method=method)
     @assert ishermitian(cef_matrix)
     E = eigvals(cef_matrix)

@@ -6,6 +6,7 @@ using LinearAlgebra
 using OffsetArrays
 using StaticArrays
 using Statistics
+using Printf
 using Trapz
 
 const PREC::Float64 = 1.0e-7    # for degeneracy calculations
@@ -40,7 +41,7 @@ export blm_dframe
 export get_alm!
 
 include("./cef_system.jl")
-export cef_diagonalization
+export print_cef_diagonalization
 export cef_hamiltonian
 export stevens_EO, stevens_O
 
@@ -71,5 +72,10 @@ export rotate_blm
 
 include("./cef_rpa.jl")
 export calc_chi0
+
+include("./cef_pcm.jl")
+export local_env
+export ligand_field
+export lattice_vectors
 
 end
