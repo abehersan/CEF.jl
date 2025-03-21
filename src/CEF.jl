@@ -77,5 +77,7 @@ include("./cef_pcm.jl")
 export local_env
 export ligand_field
 export lattice_vectors
+export tesseral_harmonics
+export calc_cefparams!
 
 end
