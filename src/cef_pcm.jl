@@ -193,13 +193,13 @@ function calc_cefparams!(lfield::local_env)
                 x,y,z=lfield.lvecs*[x,y,z]
                 R=sqrt(x^2+y^2+z^2)
                 Zlm=tesseral_harmonics(l,m,x,y,z,R)
-                Alm+=Z*Zlm/(R^(l+1))
+                Alm+=(Z*Zlm)/(R^(l+1))
+            end
+            if iszero(Alm)
+                continue
             end
             Alm*=(4pi)/(2*l+1)
             Blm=Alm*rl*al*unit_factor
-            if iszero(Blm)
-                continue
-            end
             append!(cefparams,DataFrame(:B=>Blm,:l=>l,:m=>m))
         end
     end
