@@ -1,11 +1,12 @@
-function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
+function print_cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
     cef_matrix = cef_hamiltonian(ion,cefparams;B=B,method=method)
     @assert ishermitian(cef_matrix)
     E = eigvals(cef_matrix)
     E .-= minimum(E)
     printstyled("CEF matrix diagonalization results.\n\n", color=:underline, bold=true)
     display(ion)
-    println("Landé g-factor: $(ion.gj)\n")
+    LBL=@sprintf("%1.7f",ion.gj)
+    println("Landé g-factor: $(LBL)\n")
     println("External magnetic field in (Tesla) [Bx, By, Bz]: $B\n")
     println("CEF energy levels in (meV) and in (K):")
     for i in eachindex(E)
@@ -14,6 +15,16 @@ function cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector{<:Rea
         Es = Emev, EK
         println(join(Es, ",\t"))
     end
+    return nothing
+end
+
+
+function print_cef_diagonalization(lfield::local_env; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
+    if isempty(lfield.cefparams)
+        println("Uninitialized CEF parameters, calculating...")
+        calc_cefparams!(lfield)
+    end
+    print_cef_diagonalization(lfield.ion,lfield.cefparams;B,method)
     return nothing
 end
 

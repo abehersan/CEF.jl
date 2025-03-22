@@ -23,11 +23,10 @@ function mag_entropy(HC::Vector{Float64}, T::Vector{Float64})::Vector{Float64}
 end
 
 
-function cef_entropy!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:SI, method::Symbol=:EO)::Nothing
+function cef_entropy!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:EO)::Nothing
     convfac = hc_units(units)
     @eachrow! dfcalc begin
         @newcol :HC_CALC::Vector{Float64}
-        B=[:Bx,:By,:Bz]
         E=eigvals(cef_hamiltonian(ion,cefparams;B=B,method=method))
         E .-= minimum(E)
         :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
@@ -37,17 +36,36 @@ function cef_entropy!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; uni
 end
 
 
-function cef_entropy_speclevels!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
+function cef_entropy!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:EO)::Nothing
+    if isempty(lfield.cefparams)
+        println("Uninitialized CEF parameters, calculating...")
+        calc_cefparams!(lfield)
+    end
+    cef_entropy!(lfield.ion,lfield.cefparams,dfcalc;B,units,method)
+    return nothing
+end
+
+
+function cef_entropy_speclevels!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
     # only levels specified contribute (2J+1 levels total)
     convfac = hc_units(units)
     @eachrow! dfcalc begin
         @newcol :HC_CALC::Vector{Float64}
-        B=[:Bx,:By,:Bz]
         E=eigvals(cef_hamiltonian(ion,cefparams;B=B,method=method))
         E .-= minimum(E)
         E=E[levels]
         :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
     end
     dfcalc[:,:SM_CALC]=round.(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
+    return nothing
+end
+
+
+function cef_entropy_speclevels!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
+    if isempty(lfield.cefparams)
+        println("Uninitialized CEF parameters, calculating...")
+        calc_cefparams!(lfield)
+    end
+    cef_entropy_speclevels!(lfield.ion,lfield.cefparams,dfcalc;B,levels,units,method)
     return nothing
 end

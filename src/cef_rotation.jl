@@ -2,7 +2,7 @@ function rotation_unitary(J::Real, n::Vector{<:Real}, phi::Real)::Matrix{Complex
     Jx = spin_operators(J, "x")
     Jy = spin_operators(J, "y")
     Jz = spin_operators(J, "z")
-    nnorm = normalize(n)
+    nnorm = n/sqrt(dot(n,n))
     Jproj = sum(nnorm .* [Jx, Jy, Jz])
     U = exp(-1im * phi * Jproj)
     @assert isunitary(U)
@@ -56,11 +56,6 @@ function wigner_D(l::Int, alpha::Real, beta::Real, gamma::Real)::Matrix{ComplexF
 end
 
 
-function rotation_matrix_element(l::Int, m::Int, mp::Int, alpha::Real, beta::Real, gamma::Real)::ComplexF64
-    return exp(-1.0im*mp*alpha) * small_d(l, mp, m, beta) * exp(-1.0im*m*gamma)
-end
-
-
 function small_d(l::Int, mp::Int, m::Int, beta::Real)::Float64
     if iszero(beta)
         return isequal(m, mp) * 1.0 # delta function d_m'm if beta=0
@@ -88,35 +83,8 @@ function small_d(l::Int, mp::Int, m::Int, beta::Real)::Float64
 end
 
 
-function rotate_blm(cefparams::DataFrame, alpha::Real, beta::Real, gamma::Real)::DataFrame
-    cefparams_rotated = DataFrame(B = Float64[], l = Int[], m = Int[])
-    ls = sort(collect(Set(cefparams[:, :l])))
-    for l in ls
-        S_matrix = rotate_stevens(l, alpha, beta, gamma)
-        cefparams_ori = zeros(Float64, Int(2l+1)) # original CEF parameters
-        cefparams_rot = zeros(ComplexF64, Int(2l+1)) # rotated CEF params (complex)
-        cefparams_res = zeros(Float64, Int(2l+1)) # rotated CEF parameters (real)
-        for (i, m) in enumerate(-l:1:l)
-            try
-                cefparams_ori[i] = cefparams[(cefparams.l .== l) .& (cefparams.m .== m), :B][1]
-            catch ex
-                if isa(ex, BoundsError)
-                    cefparams_ori[i] = 0.0
-                end
-            end
-        end
-        # S * cefparams where cefparams is a (2l+1) vector
-        cefparams_rot .= S_matrix * cefparams_ori
-        @assert norm(imag(cefparams_rot)) < PREC
-        cefparams_res .= real(cefparams_rot)
-        append!(cefparams_rotated, DataFrame("B"=>cefparams_res, "l"=>fill(l, Int(2l+1)), "m"=>-l:1:l))
-    end
-    return cefparams_rotated
-end
-
-
-function rotate_stevens(l::Int, alpha::Real, beta::Real, gamma::Real)::Matrix{ComplexF64}
-    return transpose(inv(Alm_matrix(l))) * wigner_D(l, alpha, beta, gamma)' * transpose(Alm_matrix(l))
+function rotation_matrix_element(l::Int, m::Int, mp::Int, alpha::Real, beta::Real, gamma::Real)::ComplexF64
+    return exp(-1.0im*mp*alpha) * small_d(l, mp, m, beta) * exp(-1.0im*m*gamma)
 end
 
 
@@ -142,4 +110,36 @@ function Alm_matrix(l::Int)::Matrix{ComplexF64}
         end
     end
     return parent(a_matrix)
+end
+
+
+function rotate_stevens(l::Int, alpha::Real, beta::Real, gamma::Real)::Matrix{ComplexF64}
+    return transpose(inv(Alm_matrix(l))) * wigner_D(l, alpha, beta, gamma)' * transpose(Alm_matrix(l))
+end
+
+
+function rotate_blm(cefparams::DataFrame, alpha::Real, beta::Real, gamma::Real)::DataFrame
+    cefparams_rotated=DataFrame(B=Float64[],l=Int[],m=Int[])
+    ls=sort(collect(Set(cefparams[:,:l])))
+    for l in ls
+        S_matrix = rotate_stevens(l, alpha, beta, gamma)
+        cefparams_ori = zeros(Float64, Int(2l+1)) # original CEF parameters
+        cefparams_rot = zeros(ComplexF64, Int(2l+1)) # rotated CEF params (complex)
+        cefparams_res = zeros(Float64, Int(2l+1)) # rotated CEF parameters (real)
+        for (i, m) in enumerate(-l:1:l)
+            try
+                cefparams_ori[i] = cefparams[(cefparams.l .== l) .& (cefparams.m .== m), :B][1]
+            catch ex
+                if isa(ex, BoundsError)
+                    cefparams_ori[i] = 0.0
+                end
+            end
+        end
+        # S * cefparams where cefparams is a (2l+1) vector
+        cefparams_rot = S_matrix * cefparams_ori
+        @assert norm(imag(cefparams_rot)) < PREC
+        cefparams_res .= real(cefparams_rot)
+        append!(cefparams_rotated, DataFrame("B"=>cefparams_res, "l"=>fill(l, Int(2l+1)), "m"=>-l:1:l))
+    end
+    return cefparams_rotated
 end

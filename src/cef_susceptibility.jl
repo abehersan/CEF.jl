@@ -44,21 +44,29 @@ function calc_chialphaalpha(; op_alpha::Matrix{ComplexF64}, Ep::Vector{Float64},
 end
 
 
-function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
+function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}, units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
-    extfield = [mean(dfcalc.Bx), mean(dfcalc.By), mean(dfcalc.Bz)]
-    spin_proj = spin_ops .* normalize(extfield)
-    E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
+    spin_proj = spin_ops .* normalize(B)
+    E, V = eigen(cef_hamiltonian(ion,cefparams;B=B,method=method))
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        :CHI_CALC=norm([
+        :CHI_CALC=sum([
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[1],T=:T,mode=mode),
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[2],T=:T,mode=mode),
                 calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[3],T=:T,mode=mode)
             ])*ion.gj^2*unit_factor
     end
+    return nothing
+end
+
+
+function cef_susceptibility_crystal!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}, units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_susceptibility_crystal!(lfield.ion,lfield.cefparams,dfcalc;B,units,method,mode)
     return nothing
 end
 
@@ -70,10 +78,19 @@ function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        chix = calc_chialphaalpha(op_alpha=spin_ops[1],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
-        chiy = calc_chialphaalpha(op_alpha=spin_ops[2],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
-        chiz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj*unit_factor
-        :CHI_CALC=round(((chix+chiy+chiz)/3),digits=SDIG)
+        chixx = calc_chialphaalpha(op_alpha=spin_ops[1],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        chiyy = calc_chialphaalpha(op_alpha=spin_ops[2],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        chizz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
+        :CHI_CALC=(chixx+chiyy+chizz)/3
     end
+    return nothing
+end
+
+
+function cef_susceptibility_powder!(lfield::local_env, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_susceptibility_powder!(lfield.ion,lfield.cefparams,dfcalc;units,method,mode)
     return nothing
 end
