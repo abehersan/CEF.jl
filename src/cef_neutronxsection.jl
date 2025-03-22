@@ -55,7 +55,7 @@ end
 function calc_neutronspectrum_xtal(ion::mag_ion, Ep::Vector{Float64}, Vp::Matrix{ComplexF64}, Qcart::Vector{<:Real}, T::Real)::Vector{VEC{2}}
     np = population_factor(Ep, T)
     ffactor = dipolar_formfactor(ion, norm(Qcart))
-    polfactors = reshape(calc_polmatrix(Qcart), 9)
+    polfactors = reshape(calc_polmatrix(Qcart)', 9)
     NXS = VEC{2}[]
     @inbounds for i in eachindex(Ep)
         if isapprox(np[i], 0.0, atol=PREC)
