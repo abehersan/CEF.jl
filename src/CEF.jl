@@ -36,6 +36,13 @@ export mag_ion
 export spin_operators
 export re_hundsrules
 
+include("./cef_pcm.jl")
+export local_env
+export ligand_field
+export lattice_vectors
+export tesseral_harmonics
+export calc_cefparams!
+
 include("./cef_utils.jl")
 export blm_dframe
 export get_alm!
@@ -72,12 +79,5 @@ export rotate_blm
 
 include("./cef_rpa.jl")
 export calc_chi0
-
-include("./cef_pcm.jl")
-export local_env
-export ligand_field
-export lattice_vectors
-export tesseral_harmonics
-export calc_cefparams!
 
 end

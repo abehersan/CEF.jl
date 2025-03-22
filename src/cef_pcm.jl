@@ -172,10 +172,8 @@ end
 
 function calc_cefparams!(lfield::local_env)
     cefparams=DataFrame(B=Float64[],l=Int[],m=Int[])
-    # unit_factor=8.85419e-12/1.60217e-19
     for l in [2,4,6]
         unit_factor=1.44e4*(0.5292)^l
-        # unit_factor=1.0
         if isequal(l,2)
             rl=lfield.ion.rad_wavefunction[1]
             al=lfield.ion.stevens_factors[1]
