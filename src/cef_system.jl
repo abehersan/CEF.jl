@@ -24,7 +24,7 @@ function print_cef_diagonalization(lfield::local_env; B::Vector{<:Real}=zeros(Fl
         println("Uninitialized CEF parameters, calculating...")
         calc_cefparams!(lfield)
     end
-    print_cef_diagonalization(lfield.ion,lfield.cefparams;B=B,method=method)
+    print_cef_diagonalization(lfield.ion,lfield.cefparams;B,method)
     return nothing
 end
 

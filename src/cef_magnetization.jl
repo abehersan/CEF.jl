@@ -29,6 +29,15 @@ function cef_magneticmoment_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
 end
 
 
+function cef_magneticmoment_crystal!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_magneticmoment_crystal!(lfield.ion,lfield.cefparams,dfcalc;T,units,method,mode)
+    return nothing
+end
+
+
 function cef_magneticmoment_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     unit_factor = mag_units(units)
     spinops = [ion.Jx,ion.Jy,ion.Jz]
@@ -48,5 +57,14 @@ function cef_magneticmoment_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
 
         :M_CALC=round(((MX + MY + MZ) / 3.0) * unit_factor,digits=SDIG)
     end
+    return nothing
+end
+
+
+function cef_magneticmoment_powder!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_magneticmoment_powder!(lfield.ion,lfield.cefparams,dfcalc;T,units,method,mode)
     return nothing
 end

@@ -36,6 +36,16 @@ function cef_entropy!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::
 end
 
 
+function cef_entropy!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:EO)::Nothing
+    if isempty(lfield.cefparams)
+        println("Uninitialized CEF parameters, calculating...")
+        calc_cefparams!(lfield)
+    end
+    cef_entropy!(lfield.ion,lfield.cefparams,dfcalc;B,units,method)
+    return nothing
+end
+
+
 function cef_entropy_speclevels!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
     # only levels specified contribute (2J+1 levels total)
     convfac = hc_units(units)
@@ -47,5 +57,15 @@ function cef_entropy_speclevels!(ion::mag_ion, cefparams::DataFrame, dfcalc::Dat
         :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
     end
     dfcalc[:,:SM_CALC]=round.(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
+    return nothing
+end
+
+
+function cef_entropy_speclevels!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
+    if isempty(lfield.cefparams)
+        println("Uninitialized CEF parameters, calculating...")
+        calc_cefparams!(lfield)
+    end
+    cef_entropy_speclevels!(lfield.ion,lfield.cefparams,dfcalc;B,levels,units,method)
     return nothing
 end

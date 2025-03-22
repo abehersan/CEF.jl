@@ -62,6 +62,15 @@ function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
 end
 
 
+function cef_susceptibility_crystal!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}, units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_susceptibility_crystal!(lfield.ion,lfield.cefparams,dfcalc;B,units,method,mode)
+    return nothing
+end
+
+
 function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
@@ -74,5 +83,14 @@ function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
         chizz = calc_chialphaalpha(op_alpha=spin_ops[3],Ep=E,Vp=V,T=:T,mode=mode)*ion.gj^2*unit_factor
         :CHI_CALC=(chixx+chiyy+chizz)/3
     end
+    return nothing
+end
+
+
+function cef_susceptibility_powder!(lfield::local_env, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:EO, mode::Function=real)::Nothing
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_susceptibility_powder!(lfield.ion,lfield.cefparams,dfcalc;units,method,mode)
     return nothing
 end

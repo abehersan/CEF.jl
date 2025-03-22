@@ -1,3 +1,18 @@
+function TAS_resfunc(E::Float64, Epeak::Float64, width::Function=x->0.2/(2*sqrt(2*log(2))))::Float64
+    return gaussian(x=E, mu=Epeak, A=1.0, sigma=width(E))
+end
+
+
+function gaussian(; x::Real, A::Real, mu::Real, sigma::Real)::Float64
+    return (A/(sqrt(2pi)*sigma))*exp(-(x-mu)^2/(2*sigma^2))
+end
+
+
+function lorentz(; x::Real, A::Real, mu::Real, gamma::Real)::Float64
+    return (A/pi)*(gamma/((x-mu)^2+gamma^2))
+end
+
+
 function dipolar_formfactor(ion::mag_ion, Q::Real)::Float64
     A_j0, a_j0, B_j0, b_j0, C_j0, c_j0, D_j0 = ion.ff_coeff_j0
     A_j2, a_j2, B_j2, b_j2, C_j2, c_j2, D_j2 = ion.ff_coeff_j2
@@ -105,6 +120,15 @@ function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc
 end
 
 
+function cef_neutronxsection_crystal!(lfield::local_env, dfcalc::DataFrame; Q::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_neutronxsection_crystal!(lfield.ion,lfield.cefparams,dfcalc;Q,T,B,resfunc,method)
+    return nothing
+end
+
+
 function cef_neutronxsection_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; Q::Real, T::Real=1.0, resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
     E, V = eigen(cef_hamiltonian(ion,cefparams;method=method))
     E .-= minimum(E)
@@ -116,16 +140,10 @@ function cef_neutronxsection_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc:
 end
 
 
-function TAS_resfunc(E::Float64, Epeak::Float64, width::Function=x->0.2/(2*sqrt(2*log(2))))::Float64
-    return gaussian(x=E, mu=Epeak, A=1.0, sigma=width(E))
-end
-
-
-function gaussian(; x::Real, A::Real, mu::Real, sigma::Real)::Float64
-    return (A/(sqrt(2pi)*sigma))*exp(-(x-mu)^2/(2*sigma^2))
-end
-
-
-function lorentz(; x::Real, A::Real, mu::Real, gamma::Real)::Float64
-    return (A/pi)*(gamma/((x-mu)^2+gamma^2))
+function cef_neutronxsection_powder!(lfield::local_env, dfcalc::DataFrame; Q::Real, T::Real=1.0, resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+    if isempty(lfield.cefparams)
+        calc_cefparams!(lfield)
+    end
+    cef_neutronxsection_powder!(lfield.ion,lfield.cefparams,dfcalc;Q,T,resfunc,method)
+    return nothing
 end
