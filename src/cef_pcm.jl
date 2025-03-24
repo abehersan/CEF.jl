@@ -173,7 +173,7 @@ end
 function calc_cefparams!(lfield::local_env)
     cefparams=DataFrame(B=Float64[],l=Int[],m=Int[])
     for l in [2,4,6]
-        unit_factor=1.44e4*(0.5292)^l
+        unit_factor=1.44e4*(0.5292^l)
         if isequal(l,2)
             rl=lfield.ion.rad_wavefunction[1]
             al=lfield.ion.stevens_factors[1]
@@ -188,7 +188,6 @@ function calc_cefparams!(lfield::local_env)
             Alm=0.0
             for pc in lfield.cartesian_pointcs
                 x,y,z,Z=pc
-                x,y,z=lfield.lvecs*[x,y,z]
                 R=sqrt(x^2+y^2+z^2)
                 Zlm=tesseral_harmonics(l,m,x,y,z,R)
                 Alm+=(Z*Zlm)/(R^(l+1))
@@ -197,7 +196,7 @@ function calc_cefparams!(lfield::local_env)
                 continue
             end
             Alm*=(4pi)/(2*l+1)
-            Blm=Alm*rl*al*unit_factor
+            Blm=-Alm*rl*al*unit_factor
             append!(cefparams,DataFrame(:B=>Blm,:l=>l,:m=>m))
         end
     end
