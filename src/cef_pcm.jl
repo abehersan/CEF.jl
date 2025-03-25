@@ -16,14 +16,14 @@ function Base.show(io::IO, ::MIME"text/plain", pcenv::local_env)
     printstyled(io,"Lattice vector b: $(pcenv.lvecs[:,2])\n")
     printstyled(io,"Lattice vector c: $(pcenv.lvecs[:,3])\n")
     println()
-    printstyled(io, "Cartesian ligand field (Å, -Ze):\n\tx\t\ty\t\tz\t\tZ\n")
+    printstyled(io, "Cartesian ligand field (Å, Ze):\n\tx\t\ty\t\tz\t\tZ\n")
     for pc in pcenv.cartesian_pointcs
         x,y,z,Z=pc
         LBL=@sprintf("\t%+3.5f\t%+3.5f\t%+3.5f\t%+3.5f\n",x,y,z,Z)
         printstyled(io,LBL)
     end
     println()
-    printstyled(io, "Spherical ligand field (Å, deg., -Ze):\n\tr\t\tθ\t\tϕ\t\tZ\n")
+    printstyled(io, "Spherical ligand field (Å, deg., Ze):\n\tr\t\tθ\t\tϕ\t\tZ\n")
     for pc in pcenv.spherical_pointcs
         rr,th,ph,Z=pc
         LBL=@sprintf("\t%+3.5f\t%+3.5f\t%+3.5f\t%+3.5f\n",rr,th*180/pi,ph*180/pi,Z)
@@ -48,7 +48,7 @@ end
 function lattice_vectors(a,b,c,alpha,beta,gamma)::MAT3
     @assert all(0 < x < 180 for x in (alpha, beta, gamma))
     sgamma=sind(gamma)
-    cgamma=sind(gamma)
+    cgamma=cosd(gamma)
     cbeta=cosd(beta)
     calpha=cosd(alpha)
     v1=[a,0.0,0.0]
@@ -170,34 +170,52 @@ function tesseral_harmonics(l::Int64,m::Int64,x::Real,y::Real,z::Real,r::Real)::
 end
 
 
-function calc_cefparams!(lfield::local_env)
+function calc_cefparams!(lfield::local_env;shielded::Bool=true)
     cefparams=DataFrame(B=Float64[],l=Int[],m=Int[])
+    if shielded
+        radwav=lfield.ion.rad_wavefunction_shielded
+    else
+        radwav=lfield.ion.rad_wavefunction_unshielded
+    end
+    sfactors=lfield.ion.stevens_factors
     for l in [2,4,6]
-        unit_factor=1.44e4*(0.5292)^l
+        unit_factor=1.44e4*(0.5292^l)
         if isequal(l,2)
-            rl=lfield.ion.rad_wavefunction[1]
-            al=lfield.ion.stevens_factors[1]
+            rl=radwav[1]
+            al=sfactors[1]
         elseif isequal(l,4)
-            rl=lfield.ion.rad_wavefunction[2]
-            al=lfield.ion.stevens_factors[2]
+            rl=radwav[2]
+            al=sfactors[2]
         elseif isequal(l,6)
-            rl=lfield.ion.rad_wavefunction[3]
-            al=lfield.ion.stevens_factors[3]
+            rl=radwav[3]
+            al=sfactors[3]
         end
         for m in -l:1:l
             Alm=0.0
             for pc in lfield.cartesian_pointcs
                 x,y,z,Z=pc
-                x,y,z=lfield.lvecs*[x,y,z]
+                rxtal=[x,y,z]
+                rcart=lfield.lvecs*rxtal
+                x,y,z=rcart
                 R=sqrt(x^2+y^2+z^2)
                 Zlm=tesseral_harmonics(l,m,x,y,z,R)
                 Alm+=(Z*Zlm)/(R^(l+1))
             end
-            if iszero(Alm)
+            Alm*=(4pi)/(2*l+1)
+            if shielded
+                if isequal(l,2)
+                    sig=lfield.ion.shielding_factors[1]
+                elseif isequal(l,4)
+                    sig=lfield.ion.shielding_factors[2]
+                elseif isequal(l,6)
+                    sig=lfield.ion.shielding_factors[3]
+                end
+                al=(1-sig)*al
+            end
+            Blm=Alm*rl*al*unit_factor
+            if iszero(Blm)
                 continue
             end
-            Alm*=(4pi)/(2*l+1)
-            Blm=Alm*rl*al*unit_factor
             append!(cefparams,DataFrame(:B=>Blm,:l=>l,:m=>m))
         end
     end

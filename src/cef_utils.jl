@@ -33,9 +33,13 @@ B_lm = A_lm * <r^l> * theta_l,
 where <r^l> is the expectation value of the radial wavefunction of the
 4f electron density (tabulated) and theta_l are the Stevens geometrical factors.
 """
-function get_alm!(bfactors::DataFrame, single_ion::mag_ion)
+function get_alm!(bfactors::DataFrame, single_ion::mag_ion; shielded::Bool=true)
     alpha, beta, gamma = single_ion.stevens_factors
-    r2, r4, r6 = single_ion.rad_wavefunction
+    if shielded
+        r2, r4, r6 = single_ion.rad_wavefunction_shielded
+    else
+        r2, r4, r6 = single_ion.rad_wavefunction_unshielded
+    end
     alm = zeros(Float64, nrow(bfactors))
     for (i, r) in enumerate(eachrow(bfactors))
         if r.l == 2

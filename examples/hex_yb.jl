@@ -9,12 +9,26 @@ using StatsPlots
 function main()
 
     ion = single_ion("Yb3+")
+    # lattice_parameters=[1,1,1,90,90,90]
+    # point_charges=[
+    #     [0,0,4,-0.2],
+    #     [0,0,4,-0.2],
+    #     [3.46,0,0,0.1],
+    #     [-3.46,0,0,0.1],
+    #     [1.73,-3,0,0.1],
+    #     [-1.73,3,0,0.1],
+    #     [1.73,3,0,0.1],
+    #     [-1.73,-3,0,0.1]
+    # ]
+    # lfield=ligand_field(ion,lattice_parameters,point_charges)
+    # calc_cefparams!(lfield)
+    # bfactors=lfield.cefparams
     bfactors = blm_dframe(Dict("B20"=>0.5622,"B40"=>1.6087e-5,"B60"=>6.412e-7,"B66"=>-8.324e-6))
 
     """ INS X-section """
     temps = [10.0, 50.0, 200.0]
     ins_plot = plot(xlabel="E (meV)", ylabel="I(Q, E) (arb. u.)", legend=:topleft)
-    dfcalc = DataFrame(EN=range(-12,12,100))
+    dfcalc = DataFrame(EN=range(-12,12,300))
     for t in temps
         cef_neutronxsection_powder!(ion,bfactors,dfcalc;Q=2.55,T=t)
         @df dfcalc plot!(ins_plot, :EN, :I_CALC, label="T=$t K")
