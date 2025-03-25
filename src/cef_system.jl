@@ -19,10 +19,10 @@ function print_cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector
 end
 
 
-function print_cef_diagonalization(lfield::local_env; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
+function print_cef_diagonalization(lfield::local_env; shielded::Bool=true, B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
     if isempty(lfield.cefparams)
         println("Uninitialized CEF parameters, calculating...")
-        calc_cefparams!(lfield)
+        calc_cefparams!(lfield;shielded)
     end
     print_cef_diagonalization(lfield.ion,lfield.cefparams;B,method)
     return nothing
