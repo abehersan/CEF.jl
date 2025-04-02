@@ -10,10 +10,9 @@ function print_cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector
     println("External magnetic field in (Tesla) [Bx, By, Bz]: $B\n")
     println("CEF energy levels in (meV) and in (K):")
     for i in eachindex(E)
-        Emev = round(E[i], digits=SDIG)
+        EmeV = round(E[i], digits=SDIG)
         EK = round(E[i]/meV_per_K, digits=SDIG)
-        Es = Emev, EK
-        println(join(Es, ",\t"))
+        println(@sprintf("%.7f\t%.7f", EmeV, EK))
     end
     return nothing
 end
