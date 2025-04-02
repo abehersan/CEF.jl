@@ -20,9 +20,7 @@ end
 
 
 function print_cef_diagonalization(lfield::local_env; shielded::Bool=true, B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:EO)::Nothing
-    if isempty(lfield.cefparams)
-        calc_cefparams!(lfield;shielded)
-    end
+    calc_cefparams!(lfield;shielded)
     print_cef_diagonalization(lfield.ion,lfield.cefparams;B,method)
     return nothing
 end
