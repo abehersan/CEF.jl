@@ -9,6 +9,7 @@ using Statistics
 using Printf
 using Trapz
 
+const CUTOFF::Float64 = 1e-17   # for comparisons against zero
 const PREC::Float64 = 1.0e-7    # for degeneracy calculations
 const SDIG::Int64 = 7           # for numerical cutoffs
 

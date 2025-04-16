@@ -213,7 +213,7 @@ function calc_cefparams!(lfield::local_env;shielded::Bool=true)
                 al=(1-sig)*al
             end
             Blm=Alm*rl*al*unit_factor
-            if iszero(Blm)
+            if Blm < CUTOFF
                 continue
             end
             append!(cefparams,DataFrame(:B=>Blm,:l=>l,:m=>m))
