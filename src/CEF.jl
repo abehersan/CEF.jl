@@ -44,6 +44,9 @@ export lattice_vectors
 export tesseral_harmonics
 export calc_cefparams!
 
+include("./powder_grid.jl")
+export SOPHE_grid
+
 include("./cef_utils.jl")
 export blm_dframe
 export get_alm!
@@ -63,8 +66,8 @@ export cef_entropy!
 export cef_entropy_speclevels!
 
 include("./cef_magnetization.jl")
-export cef_magneticmoment_crystal!
-export cef_magneticmoment_powder!
+export cef_magnetization_crystal!
+export cef_magnetization_powder!
 
 include("./cef_susceptibility.jl")
 export cef_susceptibility_crystal!

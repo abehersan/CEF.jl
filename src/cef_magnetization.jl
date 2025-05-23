@@ -11,7 +11,7 @@ function mag_units(units::Symbol)::Float64
 end
 
 
-function cef_magneticmoment_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     unit_factor=mag_units(units)
     spinops=[ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
@@ -29,16 +29,16 @@ function cef_magneticmoment_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
 end
 
 
-function cef_magneticmoment_crystal!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_crystal!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
-    cef_magneticmoment_crystal!(lfield.ion,lfield.cefparams,dfcalc;T,units,method,mode)
+    cef_magnetization_crystal!(lfield.ion,lfield.cefparams,dfcalc;T,units,method,mode)
     return nothing
 end
 
 
-function cef_magneticmoment_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     unit_factor = mag_units(units)
     spinops = [ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
@@ -55,16 +55,16 @@ function cef_magneticmoment_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
         E .-= minimum(E)
         MZ = thermal_average(Ep=E,Vp=V,op=spinops[3],T=T,mode=mode)
 
-        :M_CALC=round(((MX + MY + MZ) / 3.0) * unit_factor,digits=SDIG)
+        :M_CALC=round((sqrt(MX^2 + MY^2 + MZ^2)) * unit_factor,digits=SDIG)
     end
     return nothing
 end
 
 
-function cef_magneticmoment_powder!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_powder!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
-    cef_magneticmoment_powder!(lfield.ion,lfield.cefparams,dfcalc;T,units,method,mode)
+    cef_magnetization_powder!(lfield.ion,lfield.cefparams,dfcalc;T,units,method,mode)
     return nothing
 end
