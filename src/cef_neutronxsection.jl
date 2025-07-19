@@ -1,9 +1,9 @@
 function TAS_resfunc(E::Float64, Epeak::Float64, width::Function=x->0.2/(2*sqrt(2*log(2))))::Float64
-    return gaussian(x=E, mu=Epeak, A=1.0, sigma=width(E))
+    return gauss(x=E, mu=Epeak, A=1.0, sigma=width(E))
 end
 
 
-function gaussian(; x::Real, A::Real, mu::Real, sigma::Real)::Float64
+function gauss(; x::Real, A::Real, mu::Real, sigma::Real)::Float64
     return (A/(sqrt(2pi)*sigma))*exp(-(x-mu)^2/(2*sigma^2))
 end
 
