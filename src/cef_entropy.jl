@@ -23,20 +23,18 @@ function mag_entropy(HC::Vector{Float64}, T::Vector{Float64})::Vector{Float64}
 end
 
 
-function cef_entropy!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:EO)::Nothing
-    convfac = hc_units(units)
-    @eachrow! dfcalc begin
-        @newcol :HC_CALC::Vector{Float64}
-        E=eigvals(cef_hamiltonian(ion,cefparams;B=B,method=method))
-        E .-= minimum(E)
-        :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
-    end
-    dfcalc[:,:SM_CALC]=round.(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
+function cef_entropy!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:O)::Nothing
+    unit_factor=hc_units(units)
+    E=eigvals(cef_hamiltonian(ion,cefparams;B=B,method=method))
+    E .-= minimum(E)
+    dfcalc[:,:HC_CALC].=[mag_heatcap(E,tt) for tt in dfcalc[:,:T]]
+    dfcalc[:,:HC_CALC]*=unit_factor
+    dfcalc[:,:SM_CALC]=mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T])
     return nothing
 end
 
 
-function cef_entropy!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:EO)::Nothing
+function cef_entropy!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:O)::Nothing
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
@@ -45,22 +43,19 @@ function cef_entropy!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0
 end
 
 
-function cef_entropy_speclevels!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
+function cef_entropy_speclevels!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:O)::Nothing
     # only levels specified contribute (2J+1 levels total)
-    convfac = hc_units(units)
-    @eachrow! dfcalc begin
-        @newcol :HC_CALC::Vector{Float64}
-        E=eigvals(cef_hamiltonian(ion,cefparams;B=B,method=method))
-        E .-= minimum(E)
-        E=E[levels]
-        :HC_CALC=round(mag_heatcap(E,:T)*convfac,digits=SDIG)
-    end
-    dfcalc[:,:SM_CALC]=round.(mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T]),digits=SDIG)
+    unit_factor=hc_units(units)
+    E=eigvals(cef_hamiltonian(ion,cefparams;B=B,method=method))
+    E .-= minimum(E)
+    E=E[levels]
+    dfcalc[:,:HC_CALC]*=unit_factor
+    dfcalc[:,:SM_CALC]=mag_entropy(dfcalc[:,:HC_CALC],dfcalc[:,:T])
     return nothing
 end
 
 
-function cef_entropy_speclevels!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
+function cef_entropy_speclevels!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:O)::Nothing
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
