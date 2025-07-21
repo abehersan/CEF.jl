@@ -27,8 +27,7 @@ function population_factor(Ep::Vector{Float64}, T::Real)::Vector{Float64}
 end
 
 
-function thermal_average(; Ep::Vector{Float64}, Vp::Matrix{ComplexF64},
-                        op::Matrix{ComplexF64}, T::Real, mode::Function=real)::Float64
+function thermal_average(; Ep::Vector{Float64}, Vp::Matrix{ComplexF64}, op::Matrix{ComplexF64}, T::Real, mode::Function=real)::Float64
     tav::ComplexF64 = 0.0
     np = population_factor(Ep, T)
     @views @inbounds for i in eachindex(Ep)

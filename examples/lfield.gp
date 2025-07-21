@@ -1,4 +1,4 @@
-set terminal wxt enhanced title 'CEF.jl point charges'
+set terminal wxt size 720,720 enhanced title 'CEF.jl point charges'
 set xlabel 'x (Å)'
 set ylabel 'y (Å)'
 set zlabel 'z (Å)'

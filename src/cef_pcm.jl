@@ -107,172 +107,172 @@ end
 
 function tesseral_harmonics(l::Int64,m::Int64,x::Real,y::Real,z::Real,r::Real)::Real
     if isequal(l,0)
-        Z00=+sqrt(1/(4*pi))
-        return Z00
+        T00=+sqrt(1/(4*pi))
+        return T00
     end
     if isequal(l,1)
         if isequal(m,-1)
-            Z1m1=+sqrt(3/(4*pi))*(y/r)
-            return Z1m1
+            T1m1=+sqrt(3/(4*pi))*(y/r)
+            return T1m1
         elseif isequal(m,0)
-            Z10=+sqrt(3/(4*pi))*(z/r)
-            return Z10
+            T10=+sqrt(3/(4*pi))*(z/r)
+            return T10
         elseif isequal(m,+1)
-            Z11=-sqrt(3/(4*pi))*(x/r)
-            return Z11
+            T11=-sqrt(3/(4*pi))*(x/r)
+            return T11
         end
     end
     if isequal(l,2)
         if isequal(m,-2)
-            Z2m2=+sqrt(15/pi)*(1/4)*((2*x*y)/r^2)
-            return Z2m2
+            T2m2=+sqrt(15/pi)*(1/4)*((2*x*y)/r^2)
+            return T2m2
         elseif isequal(m,-1)
-            Z2m1=+sqrt(15/pi)*(1/2)*((y*z)/r^2)
-            return Z2m1
+            T2m1=+sqrt(15/pi)*(1/2)*((y*z)/r^2)
+            return T2m1
         elseif isequal(m,0)
-            Z20=+sqrt(5/pi)*(1/4)*((3*z^2-r^2)/r^2)
-            return Z20
+            T20=+sqrt(5/pi)*(1/4)*((3*z^2-r^2)/r^2)
+            return T20
         elseif isequal(m,+1)
-            Z21=-sqrt(15/pi)*(1/2)*((x*z)/r^2)
-            return Z21
+            T21=-sqrt(15/pi)*(1/2)*((x*z)/r^2)
+            return T21
         elseif isequal(m,+2)
-            Z22=+sqrt(15/pi)*(1/4)*((x^2-y^2)/r^2)
-            return Z22
+            T22=+sqrt(15/pi)*(1/4)*((x^2-y^2)/r^2)
+            return T22
         end
     end
     if isequal(l,3)
         if isequal(m,-3)
-            Z3m3=+sqrt(35/(32*pi))*((3*x^2*y-y^3)/r^3)
-            return Z3m3
+            T3m3=+sqrt(35/(32*pi))*((3*x^2*y-y^3)/r^3)
+            return T3m3
         elseif isequal(m,-2)
-            Z3m2=+sqrt(105/(16*pi))*((2*x*y*z)/r^3)
-            return Z3m2
+            T3m2=+sqrt(105/(16*pi))*((2*x*y*z)/r^3)
+            return T3m2
         elseif isequal(m,-1)
-            Z3m1=+sqrt(21/(32*pi))*(y*(5*z^2-r^2)/r^3)
-            return Z3m1
+            T3m1=+sqrt(21/(32*pi))*(y*(5*z^2-r^2)/r^3)
+            return T3m1
         elseif isequal(m,0)
-            Z30=+sqrt(7/(16*pi))*(z*(5*z^2-3*r^2)/r^3)
-            return Z30
+            T30=+sqrt(7/(16*pi))*(z*(5*z^2-3*r^2)/r^3)
+            return T30
         elseif isequal(m,+1)
-            Z31=-sqrt(21/(32*pi))*(x*(5*z^2-r^2)/r^3)
-            return Z31
+            T31=-sqrt(21/(32*pi))*(x*(5*z^2-r^2)/r^3)
+            return T31
         elseif isequal(m,+2)
-            Z32=+sqrt(105/(16*pi))*(z*(x^2-y^2)/r^3)
-            return Z32
+            T32=+sqrt(105/(16*pi))*(z*(x^2-y^2)/r^3)
+            return T32
         elseif isequal(m,+3)
-            Z33=-sqrt(35/(32*pi))*((x^3-3*x*y^2)/r^3)
-            return Z33
+            T33=-sqrt(35/(32*pi))*((x^3-3*x*y^2)/r^3)
+            return T33
         end
     end
     if isequal(l,4)
         if isequal(m,-4)
-            Z4m4=+sqrt(35/pi)*(3/16)*(4*(x^3*y-x*y^3)/r^4)
-            return Z4m4
+            T4m4=+sqrt(35/pi)*(3/16)*(4*(x^3*y-x*y^3)/r^4)
+            return T4m4
         elseif isequal(m,-3)
-            Z4m3=+sqrt(70/pi)*(3/8)*(z*(3*x^2*y-y^3)/r^4)
-            return Z4m3
+            T4m3=+sqrt(70/pi)*(3/8)*(z*(3*x^2*y-y^3)/r^4)
+            return T4m3
         elseif isequal(m,-2)
-            Z4m2=+sqrt(5/pi)*(3/8)*(2*x*y*(7*z^2-r^2)/r^4)
-            return Z4m2
+            T4m2=+sqrt(5/pi)*(3/8)*(2*x*y*(7*z^2-r^2)/r^4)
+            return T4m2
         elseif isequal(m,-1)
-            Z4m1=+sqrt(5/(2*pi))*(3/4)*(y*z*(7*z^2-3*r^2)/r^4)
-            return Z4m1
+            T4m1=+sqrt(5/(2*pi))*(3/4)*(y*z*(7*z^2-3*r^2)/r^4)
+            return T4m1
         elseif isequal(m,0)
-            Z40=+sqrt(1/pi)*(3/16)*((35*z^4-30*z^2*r^2+3*r^4)/r^4)
-            return Z40
+            T40=+sqrt(1/pi)*(3/16)*((35*z^4-30*z^2*r^2+3*r^4)/r^4)
+            return T40
         elseif isequal(m,1)
-            Z41=+sqrt(5/(2*pi))*(3/4)*(x*z*(7*z^2-3*r^2)/r^4)
-            return Z41
+            T41=+sqrt(5/(2*pi))*(3/4)*(x*z*(7*z^2-3*r^2)/r^4)
+            return T41
         elseif isequal(m,2)
-            Z42=+sqrt(5/pi)*(3/8)*((x^2-y^2)*(7*z^2-r^2)/r^4)
-            return Z42
+            T42=+sqrt(5/pi)*(3/8)*((x^2-y^2)*(7*z^2-r^2)/r^4)
+            return T42
         elseif isequal(m,3)
-            Z43=+sqrt(70/pi)*(3/8)*(z*(x^3-3*x*y^2)/r^4)
-            return Z43
+            T43=+sqrt(70/pi)*(3/8)*(z*(x^3-3*x*y^2)/r^4)
+            return T43
         elseif isequal(m,4)
-            Z44=+sqrt(35/pi)*(3/16)*((x^4-6*x^2*y^2+y^4)/r^4)
-            return Z44
+            T44=+sqrt(35/pi)*(3/16)*((x^4-6*x^2*y^2+y^4)/r^4)
+            return T44
         end
     end
     if isequal(l,5)
         if isequal(m,-5)
-            Z5m5=sqrt(693/(512*pi))*((5*x^4*y-10*x^2*y^3+y^5)/r^5)
-            return Z5m5
+            T5m5=sqrt(693/(512*pi))*((5*x^4*y-10*x^2*y^3+y^5)/r^5)
+            return T5m5
         elseif isequal(m,-4)
-            Z5m4=sqrt(3465/(256*pi))*(4*z*(x^3*y-x*y^3)/r^5)
-            return Z5m4
+            T5m4=sqrt(3465/(256*pi))*(4*z*(x^3*y-x*y^3)/r^5)
+            return T5m4
         elseif isequal(m,-3)
-            Z5m3=sqrt(385/(512*pi))*((3*x^2*y-y^3)*(9*z^2-r^2)/r^5)
-            return Z5m3
+            T5m3=sqrt(385/(512*pi))*((3*x^2*y-y^3)*(9*z^2-r^2)/r^5)
+            return T5m3
         elseif isequal(m,-2)
-            Z5m2=sqrt(1155/(64*pi))*(2*x*y*(3*z^3-z*r^2)/r^5)
-            return Z5m2
+            T5m2=sqrt(1155/(64*pi))*(2*x*y*(3*z^3-z*r^2)/r^5)
+            return T5m2
         elseif isequal(m,-1)
-            Z5m1=sqrt(165/(256*pi))*(y*(21*z^4-14*z^2*r^2+r^4)/r^5)
-            return Z5m1
+            T5m1=sqrt(165/(256*pi))*(y*(21*z^4-14*z^2*r^2+r^4)/r^5)
+            return T5m1
         elseif isequal(m,0)
-            Z50=sqrt(11/(256*pi))*((63*z^5-70*z^3*r^2+15*z*r^4)/r^5)
-            return Z50
+            T50=sqrt(11/(256*pi))*((63*z^5-70*z^3*r^2+15*z*r^4)/r^5)
+            return T50
         elseif isequal(m,+1)
-            Z51=-sqrt(165/(256*pi))*(x*(21*z^4-14*z^2*r^2+r^4)/r^5)
-            return Z51
+            T51=-sqrt(165/(256*pi))*(x*(21*z^4-14*z^2*r^2+r^4)/r^5)
+            return T51
         elseif isequal(m,+2)
-            Z52=sqrt(1155/(64*pi))*((x^2-y^2)*(3*z^3-z*r^2)/r^5)
-            return Z52
+            T52=sqrt(1155/(64*pi))*((x^2-y^2)*(3*z^3-z*r^2)/r^5)
+            return T52
         elseif isequal(m,+3)
-            Z53=-sqrt(385/(512*pi))*((x^3-3*x*y^2)*(9*z^2-r^2)/r^5)
-            return Z53
+            T53=-sqrt(385/(512*pi))*((x^3-3*x*y^2)*(9*z^2-r^2)/r^5)
+            return T53
         elseif isequal(m,+4)
-            Z54=sqrt(3465/(256*pi))*((x^4-6*x^2*y^2+y^4)/r^5)
-            return Z54
+            T54=sqrt(3465/(256*pi))*((x^4-6*x^2*y^2+y^4)/r^5)
+            return T54
         elseif isequal(m,+5)
-            Z55=-sqrt(693/(512*pi))*((x^5-10*x^3*y^2+5*x*y^4)/r^5)
-            return Z55
+            T55=-sqrt(693/(512*pi))*((x^5-10*x^3*y^2+5*x*y^4)/r^5)
+            return T55
         end
     end
     if isequal(l,6)
         if isequal(m,-6)
-            Z6m6=sqrt(26/(231*pi))*(231/64)*((6*x^5*y-20*x^3*y^3+6*x*y^5)/r^6)
-            return Z6m6
+            T6m6=sqrt(26/(231*pi))*(231/64)*((6*x^5*y-20*x^3*y^3+6*x*y^5)/r^6)
+            return T6m6
         elseif isequal(m,-5)
-            Z6m5=sqrt(9009/(512*pi))*(z*(5*x^4*y-10*x^2*y^3+y^5)/r^6)
-            return Z6m5
+            T6m5=sqrt(9009/(512*pi))*(z*(5*x^4*y-10*x^2*y^3+y^5)/r^6)
+            return T6m5
         elseif isequal(m,-4)
-            Z6m4=sqrt(13/(7*pi))*(21/32)*(4*(x^3*y-x*y^3)*(11*z^2-r^2)/r^6)
-            return Z6m4
+            T6m4=sqrt(13/(7*pi))*(21/32)*(4*(x^3*y-x*y^3)*(11*z^2-r^2)/r^6)
+            return T6m4
         elseif isequal(m,-3)
-            Z6m3=sqrt(2730/pi)*(1/32)*((3*x^2*y-y^3)*(11*z^3-3*z*r^2)/r^6)
-            return Z6m3
+            T6m3=sqrt(2730/pi)*(1/32)*((3*x^2*y-y^3)*(11*z^3-3*z*r^2)/r^6)
+            return T6m3
         elseif isequal(m,-2)
-            Z6m2=sqrt(2730/pi)*(1/64)*(2*x*y*(33*z^4-13*z^2*r^2+5*r^4)/r^6)
-            return Z6m2
+            T6m2=sqrt(2730/pi)*(1/64)*(2*x*y*(33*z^4-13*z^2*r^2+5*r^4)/r^6)
+            return T6m2
         elseif isequal(m,-1)
-            Z6m1=sqrt(273/(4*pi))*(1/8)*(x*z*(33*z^4-30*z^2*r^2+5*r^4)/r^6)
-            return Z6m1
+            T6m1=sqrt(273/(4*pi))*(1/8)*(x*z*(33*z^4-30*z^2*r^2+5*r^4)/r^6)
+            return T6m1
         elseif isequal(m,0)
-            Z60=sqrt(13/pi)*(1/32)*((231*z^6-315*z^4*r^2+105*z^2*r^4-5*r^6)/r^6)
-            return Z60
+            T60=sqrt(13/pi)*(1/32)*((231*z^6-315*z^4*r^2+105*z^2*r^4-5*r^6)/r^6)
+            return T60
         elseif isequal(m,1)
-            Z61=-sqrt(273/(4*pi))*(1/8)*(x*z*(33*z^4-30*z^2*r^2+5*r^4)/r^6)
-            return Z61
+            T61=-sqrt(273/(4*pi))*(1/8)*(x*z*(33*z^4-30*z^2*r^2+5*r^4)/r^6)
+            return T61
         elseif isequal(m,2)
-            Z62=sqrt(2730/pi)*(1/64)*((x^2-y^2)*(33*z^4-18*z^2*r^2+r^4)/r^6)
-            return Z62
+            T62=sqrt(2730/pi)*(1/64)*((x^2-y^2)*(33*z^4-18*z^2*r^2+r^4)/r^6)
+            return T62
         elseif isequal(m,3)
-            Z63=-sqrt(2730/pi)*(1/32)*((x^3-3*x*y^2)*(11*z^3-3*z*r^2)/r^6)
-            return Z63
+            T63=-sqrt(2730/pi)*(1/32)*((x^3-3*x*y^2)*(11*z^3-3*z*r^2)/r^6)
+            return T63
         elseif isequal(m,4)
-            Z64=sqrt(13/(7*pi))*(21/32)*((x^4-6*x^2*y^2+y^4)*(11*z^2-r^2)/r^6)
-            return Z64
+            T64=sqrt(13/(7*pi))*(21/32)*((x^4-6*x^2*y^2+y^4)*(11*z^2-r^2)/r^6)
+            return T64
         elseif isequal(m,5)
-            Z65=-sqrt(9009/(512*pi))*(z*(x^5-10*x^3*y^2+5*x*y^4)/r^6)
-            return Z65
+            T65=-sqrt(9009/(512*pi))*(z*(x^5-10*x^3*y^2+5*x*y^4)/r^6)
+            return T65
         elseif isequal(m,6)
-            Z66=sqrt(26/(231*pi))*(231/4)*((x^6-15*x^4*y^2+15*x^2*y^4-y^6)/r^6)
-            return Z66
+            T66=sqrt(26/(231*pi))*(231/4)*((x^6-15*x^4*y^2+15*x^2*y^4-y^6)/r^6)
+            return T66
         end
     end
-    @error("Values of l=$(l) and/or m=$(m) invalid. l must be one of [2,4,6] and m takes values between -l and l.")
+    @error("Values of l=$(l) and/or m=$(m) invalid. l must be one of [1,2,3,4,5,6] and m takes values between -l and l.")
 end
 
 
@@ -283,7 +283,6 @@ function calc_cefparams!(lfield::local_env)
     ahc=1.43996e4
     a0=0.52917721067
     for l in [2,4,6]
-        unit_factor=ahc*a0^l
         if isequal(l,2)
             rl=radwav[1]
             al=sfactors[1]
@@ -301,13 +300,11 @@ function calc_cefparams!(lfield::local_env)
             Alm=0.0
             for pc in lfield.cartesian_pointcs
                 x,y,z,Z=pc
-                rcart=[x,y,z]
-                R=norm(rcart)
-                Zlm=tesseral_harmonics(l,m,rcart...,R)
-                Alm+=((4pi)/(2*l+1))*(Z*Zlm)/(R^(l+1))
+                R=sqrt(x^2+y^2+z^2)
+                Tlm=tesseral_harmonics(l,m,x,y,z,R)
+                Alm+=((4pi)/(2*l+1))*(Z*Tlm)/(R^(l+1))
             end
-            al=(1-sig)*al
-            Blm=-Alm*rl*al*unit_factor
+            Blm=al*(1-sig)*rl*Alm*ahc*a0^l
             if iszero(Blm)
                 continue
             end
@@ -321,7 +318,7 @@ end
 
 function plot_local_env(lfield::local_env; path="./lfield.gp")
     open(path, "w") do io
-        println(io, "set terminal wxt enhanced title 'CEF.jl point charges'")
+        println(io, "set terminal wxt size 720,720 enhanced title 'CEF.jl point charges'")
         println(io, "set xlabel 'x (Å)'")
         println(io, "set ylabel 'y (Å)'")
         println(io, "set zlabel 'z (Å)'")

@@ -11,25 +11,23 @@ function mag_units(units::Symbol)::Float64
 end
 
 
-function cef_magnetization_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:O, mode::Function=real)
     unit_factor=mag_units(units)
-    spinops=[ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
         @newcol :M_CALC::Vector{Float64}
         extfield = [:Bx,:By,:Bz]
         E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
         E .-= minimum(E)
-        :M_CALC=sum([
-                thermal_average(Ep=E,Vp=V,op=spinops[1],T=T,mode=mode),
-                thermal_average(Ep=E,Vp=V,op=spinops[2],T=T,mode=mode),
-                thermal_average(Ep=E,Vp=V,op=spinops[3],T=T,mode=mode)
-            ])*ion.gj*unit_factor
+        :M_CALC=thermal_average(Ep=E,Vp=V,op=ion.Jx,T=T,mode=mode)+
+                thermal_average(Ep=E,Vp=V,op=ion.Jy,T=T,mode=mode)+
+                thermal_average(Ep=E,Vp=V,op=ion.Jz,T=T,mode=mode)
     end
+    dfcalc[:,:M_CALC]*=(ion.gj*unit_factor)
     return nothing
 end
 
 
-function cef_magnetization_crystal!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_crystal!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:O, mode::Function=real)
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
@@ -38,30 +36,30 @@ function cef_magnetization_crystal!(lfield::local_env, dfcalc::DataFrame; T::Rea
 end
 
 
-function cef_magnetization_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:O, mode::Function=real)
     unit_factor = mag_units(units)
-    spinops = [ion.Jx,ion.Jy,ion.Jz]
     @eachrow! dfcalc begin
         @newcol :M_CALC::Vector{Float64}
         E, V = eigen(cef_hamiltonian(ion,cefparams; B=[:B,0.0,0.0],method=method))
         E .-= minimum(E)
-        MX = thermal_average(Ep=E,Vp=V,op=spinops[1],T=T,mode=mode)
+        MX = thermal_average(Ep=E,Vp=V,op=ion.Jx,T=T,mode=mode)
 
         E, V = eigen(cef_hamiltonian(ion,cefparams; B=[0.0,:B,0.0],method=method))
         E .-= minimum(E)
-        MY = thermal_average(Ep=E,Vp=V,op=spinops[2],T=T,mode=mode)
+        MY = thermal_average(Ep=E,Vp=V,op=ion.Jy,T=T,mode=mode)
 
         E, V = eigen(cef_hamiltonian(ion,cefparams; B=[0.0,0.0,:B],method=method))
         E .-= minimum(E)
-        MZ = thermal_average(Ep=E,Vp=V,op=spinops[3],T=T,mode=mode)
+        MZ = thermal_average(Ep=E,Vp=V,op=ion.Jz,T=T,mode=mode)
 
-        :M_CALC=round((sqrt(MX^2 + MY^2 + MZ^2)) * unit_factor,digits=SDIG)
+        :M_CALC=sqrt(MX^2 + MY^2 + MZ^2)
     end
+    dfcalc[:,:M_CALC]*=(ion.gj*unit_factor)
     return nothing
 end
 
 
-function cef_magnetization_powder!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:EO, mode::Function=real)
+function cef_magnetization_powder!(lfield::local_env, dfcalc::DataFrame; T::Real=1.0, units::Symbol=:ATOMIC, method::Symbol=:O, mode::Function=real)
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
