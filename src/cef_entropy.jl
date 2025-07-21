@@ -38,7 +38,6 @@ end
 
 function cef_entropy!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], units::Symbol=:SI, method::Symbol=:EO)::Nothing
     if isempty(lfield.cefparams)
-        println("Uninitialized CEF parameters, calculating...")
         calc_cefparams!(lfield)
     end
     cef_entropy!(lfield.ion,lfield.cefparams,dfcalc;B,units,method)
@@ -63,7 +62,6 @@ end
 
 function cef_entropy_speclevels!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}=[0.0,0.0,0.0], levels::UnitRange=1:4, units::Symbol=:SI, method::Symbol=:EO)::Nothing
     if isempty(lfield.cefparams)
-        println("Uninitialized CEF parameters, calculating...")
         calc_cefparams!(lfield)
     end
     cef_entropy_speclevels!(lfield.ion,lfield.cefparams,dfcalc;B,levels,units,method)

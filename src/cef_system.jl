@@ -10,16 +10,16 @@ function print_cef_diagonalization(ion::mag_ion, cefparams::DataFrame; B::Vector
     println("External magnetic field in (Tesla) [Bx, By, Bz]: $B\n")
     println("CEF energy levels in (meV) and in (K):")
     for i in eachindex(E)
-        EmeV = round(E[i], digits=SDIG)
-        EK = round(E[i]/meV_per_K, digits=SDIG)
+        EmeV = E[i]
+        EK = E[i]/meV_per_K
         println(@sprintf("%.7f\t%.7f", EmeV, EK))
     end
     return nothing
 end
 
 
-function print_cef_diagonalization(lfield::local_env; shielded::Bool=true, B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:O)::Nothing
-    calc_cefparams!(lfield;shielded)
+function print_cef_diagonalization(lfield::local_env; B::Vector{<:Real}=zeros(Float64, 3), method::Symbol=:O)::Nothing
+    calc_cefparams!(lfield)
     print_cef_diagonalization(lfield.ion,lfield.cefparams;B,method)
     return nothing
 end
@@ -91,11 +91,6 @@ function stevens_O(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
         elseif m == 0
             O10 = Jz
             return Hermitian(O10)
-        else
-            err_message =
-            "Given values of l=$l and m=$m not supported.\n"*
-            "Only l=[2, 4, 6] and m = -l:1:l  are currently supported."
-            @error err_message
         end
     elseif l == 2
         if m == -2
@@ -113,11 +108,29 @@ function stevens_O(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
         elseif m == 2
             O22 = 1.0/2.0 * (Jp^2 + Jm^2)
             return Hermitian(O22)
-        else
-            err_message =
-            "Given values of l=$l and m=$m not supported.\n"*
-            "Only l=[2, 4, 6] and m = -l:1:l  are currently supported."
-            @error err_message
+        end
+    elseif l == 3
+        if m == -3
+            O3m3 = -1.0im/2.0 * (Jp^3 - Jm^3)
+            return Hermitian(O3m3)
+        elseif m == -2
+            O3m2 = -1.0im/4.0 * (Jz*(Jp^2 - Jm^2) + (Jp^2 - Jm^2)*Jz)
+            return Hermitian(O3m2)
+        elseif m == -1
+            O3m1 = -1.0im/4.0 * ((Jp - Jm) * (5.0*Jz^2 - X - 0.5I) + (5.0*Jz^2 - X - 0.5I) * (Jp - Jm))
+            return Hermitian(O3m1)
+        elseif m == 0
+            O30 = 5.0*Jz^3 - (3.0*X - 1.0I) * Jz
+            return Hermitian(O30)
+        elseif m == 1
+            O31 = 1.0/4.0 * ((Jp + Jm) * (5.0*Jz^2 - X - 0.5I) + (5.0*Jz^2 - X - 0.5I) * (Jp + Jm))
+            return Hermitian(O31)
+        elseif m == 2
+            O32 = 1.0/4.0 * (Jz*(Jp^2 + Jm^2) + (Jp^2 + Jm^2)*Jz)
+            return Hermitian(O32)
+        elseif m == 3
+            O33 = 1.0/2.0 * (Jp^3 + Jm^3)
+            return Hermitian(O33)
         end
     elseif l == 4
         if m == -4
@@ -147,11 +160,41 @@ function stevens_O(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
         elseif m == 4
             O44 = 1.0/2.0 * (Jp^4 + Jm^4)
             return Hermitian(O44)
-        else
-            err_message =
-            "Given values of l=$l and m=$m not supported.\n"*
-            "Only l=[2, 4, 6] and m = -l:1:l  are currently supported."
-            @error err_message
+        end
+    elseif l == 5
+        if m == -5
+            O5m5 = -1.0im/2.0 * (Jp^5 - Jm^5)
+            return Hermitian(O5m5)
+        elseif m == -4
+            O5m4 = -1.0im/4.0 * ((Jp^4 - Jm^4) * Jz + Jz * (Jp^4 - Jm^4))
+            return Hermitian(O5m4)
+        elseif m == -3
+            O5m3 = -1.0im/4.0 * ((Jp^3 - Jm^3) * (9.0*Jz^2 - X - (33.0/2.0)I) + (9.0*Jz^2 - X - (33.0/2.0)I) * (Jp^3 - Jm^3))
+            return Hermitian(O5m3)
+        elseif m == -2
+            O5m2 = -1.0im/4.0 * ((Jp^2 - Jm^2) * (3.0*Jz^3 - (X + 6.0I) * Jz) + (3.0*Jz^3 - (X + 6.0I) * Jz) * (Jp^2 - Jm^2))
+            return Hermitian(O5m2)
+        elseif m == -1
+            O5m1 = -1.0im/4.0 * ((Jp - Jm) * (21.0*Jz^4 - 14.0*Jz^2*X + X^2 - X + (3.0/2.0)I) + (21.0*Jz^4 - 14.0*Jz^2*X + X^2 - X + (3.0/2.0)I) * (Jp - Jm))
+            return Hermitian(O5m1)
+        elseif m == 0
+            O50 = 63.0*Jz^5 - (70.0*X - 105.0I)*Jz^3 + (15.0*X^2 - 50.0*X + 12.0I)*Jz
+            return Hermitian(O50)
+        elseif m == 1
+            O51 = 1.0/4.0 * ((Jp + Jm) * (21.0*Jz^4 - 14.0*Jz^2*X + X^2 - X + (3.0/2.0)I) + (21.0*Jz^4 - 14.0*Jz^2*X + X^2 - X + (3.0/2.0)I) * (Jp + Jm))
+            return Hermitian(O51)
+        elseif m == 2
+            O52 = 1.0/4.0 * ((Jp^2 + Jm^2) * (3.0*Jz^3 - (X + 6.0I) * Jz) + (3.0*Jz^3 - (X + 6.0I) * Jz) * (Jp^2 + Jm^2))
+            return Hermitian(O52)
+        elseif m == 3
+            O53 = 1.0/4.0 * ((Jp^3 + Jm^3) * (9.0*Jz^2 - X - (33.0/2.0)I) + (9.0*Jz^2 - X - (33.0/2.0)I) * (Jp^3 + Jm^3))
+            return Hermitian(O53)
+        elseif m == 4
+            O54 = 1.0/4.0 * ((Jp^4 + Jm^4) * Jz + Jz * (Jp^4 + Jm^4))
+            return Hermitian(O54)
+        elseif m == 5
+            O55 = 1.0/2.0 * (Jp^5 + Jm^5)
+            return Hermitian(O55)
         end
     elseif l == 6
         if m == -6
@@ -193,16 +236,8 @@ function stevens_O(ion::mag_ion, l::Int, m::Int)::HERMITIANC64
         elseif m == 6
             O66 = 1.0/2.0 * (Jp^6 + Jm^6)
             return Hermitian(O66)
-        else
-            err_message =
-            "Given values of l=$l and m=$m not supported.\n"*
-            "Only l=[2, 4, 6] and m = -l:1:l  are currently supported."
-            @error err_message
         end
     else
-        err_message =
-        "Given values of l=$l and m=$m not supported.\n"*
-        "Only l=[2, 4, 6] and m = -l:1:l  are currently supported."
         @error err_message
     end
 end

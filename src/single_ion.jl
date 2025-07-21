@@ -66,17 +66,17 @@ end
 
 Base.@kwdef mutable struct mag_ion
     ion::String
-    J::Float64
+    J::Rational
     Jx::Matrix{ComplexF64}
     Jy::Matrix{ComplexF64}
     Jz::Matrix{ComplexF64}
     Jp::Matrix{ComplexF64}
     Jm::Matrix{ComplexF64}
-    gj::Float64
+    gj::Rational
     stevens_factors::VEC{3}
     rad_wavefunction::VEC{3}
     shielding_factors::VEC{3}
-    C2::Float64
+    C2::Rational
     ff_coeff_j0::VEC{7}
     ff_coeff_j2::VEC{7}
 end

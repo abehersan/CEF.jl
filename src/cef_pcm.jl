@@ -34,19 +34,30 @@ end
 
 
 function ligand_field(ion,lparams,pointcharges;coords::Symbol=:cartesian)::local_env
+    lvecs=lattice_vectors(lparams...)
+    cartesian_pointcs=VEC{4}[]
+    spherical_pointcs=VEC{4}[]
     if isequal(coords,:cartesian)
-        cartesian_pointcs=[VEC{4}(pc) for pc in pointcharges]
-        spherical_pointcs=[[to_spherical(pc[1:3])...,pc[4]] for pc in pointcharges]
+        for pc in pointcharges
+            pccart=lvecs*pc[1:3]
+            pcsphe=to_spherical(pccart)
+            push!(cartesian_pointcs,VEC{4}(pccart...,pc[end]))
+            push!(spherical_pointcs,VEC{4}(pcsphe...,pc[end]))
+        end
     elseif isequal(coords,:spherical)
-        cartesian_pointcs=[[to_cartesian(pc[1:3])...,pc[4]] for pc in pointcharges]
-        spherical_pointcs=[VEC{4}(pc) for pc in pointcharges]
+        for pc in pointcharges
+            pcsphe=pc[1:3]
+            pccart=to_cartesian(pcsphe)
+            push!(cartesian_pointcs,VEC{4}(pccart...,pc[end]))
+            push!(spherical_pointcs,VEC{4}(pcsphe...,pc[end]))
+        end
     else
         @error "Coordinates $units not understood. Use one of either :spherical or :cartesian"
     end
     lenv=local_env(
         ion=ion,
         lparams=VEC{6}(lparams),
-        lvecs=lattice_vectors(lparams...),
+        lvecs=lvecs,
         cartesian_pointcs=cartesian_pointcs,
         spherical_pointcs=spherical_pointcs,
         cefparams=DataFrame()
@@ -95,7 +106,6 @@ end
 
 
 function tesseral_harmonics(l::Int64,m::Int64,x::Real,y::Real,z::Real,r::Real)::Real
-    "from the mcphase manual, p.135 with corrected prefactors from scheie, pycef"
     if isequal(l,0)
         Z00=+sqrt(1/(4*pi))
         return Z00
@@ -171,13 +181,13 @@ function tesseral_harmonics(l::Int64,m::Int64,x::Real,y::Real,z::Real,r::Real)::
             Z40=+sqrt(1/pi)*(3/16)*((35*z^4-30*z^2*r^2+3*r^4)/r^4)
             return Z40
         elseif isequal(m,1)
-            Z41=-sqrt(5/(2*pi))*(3/4)*(x*z*(7*z^2-3*r^2)/r^4)
+            Z41=+sqrt(5/(2*pi))*(3/4)*(x*z*(7*z^2-3*r^2)/r^4)
             return Z41
         elseif isequal(m,2)
             Z42=+sqrt(5/pi)*(3/8)*((x^2-y^2)*(7*z^2-r^2)/r^4)
             return Z42
         elseif isequal(m,3)
-            Z43=-sqrt(70/pi)*(3/8)*(z*(x^3-3*x*y^2)/r^4)
+            Z43=+sqrt(70/pi)*(3/8)*(z*(x^3-3*x*y^2)/r^4)
             return Z43
         elseif isequal(m,4)
             Z44=+sqrt(35/pi)*(3/16)*((x^4-6*x^2*y^2+y^4)/r^4)
@@ -266,51 +276,38 @@ function tesseral_harmonics(l::Int64,m::Int64,x::Real,y::Real,z::Real,r::Real)::
 end
 
 
-function calc_cefparams!(lfield::local_env;shielded::Bool=true)
+function calc_cefparams!(lfield::local_env)
     cefparams=DataFrame(B=Float64[],l=Int[],m=Int[])
-    if shielded
-        radwav=lfield.ion.rad_wavefunction_shielded
-    else
-        radwav=lfield.ion.rad_wavefunction_unshielded
-    end
+    radwav=lfield.ion.rad_wavefunction
     sfactors=lfield.ion.stevens_factors
     ahc=1.43996e4
     a0=0.52917721067
-    acart=lfield.lvecs[:,1]
-    bcart=lfield.lvecs[:,2]
-    ccart=lfield.lvecs[:,3]
     for l in [2,4,6]
         unit_factor=ahc*a0^l
         if isequal(l,2)
             rl=radwav[1]
             al=sfactors[1]
+            sig=lfield.ion.shielding_factors[1]
         elseif isequal(l,4)
             rl=radwav[2]
             al=sfactors[2]
+            sig=lfield.ion.shielding_factors[2]
         elseif isequal(l,6)
             rl=radwav[3]
             al=sfactors[3]
+            sig=lfield.ion.shielding_factors[3]
         end
         for m in -l:1:l
             Alm=0.0
             for pc in lfield.cartesian_pointcs
                 x,y,z,Z=pc
-                rcart=acart*x .+ bcart*y .+ ccart*z
+                rcart=[x,y,z]
                 R=norm(rcart)
                 Zlm=tesseral_harmonics(l,m,rcart...,R)
                 Alm+=((4pi)/(2*l+1))*(Z*Zlm)/(R^(l+1))
             end
-            if shielded
-                if isequal(l,2)
-                    sig=lfield.ion.shielding_factors[1]
-                elseif isequal(l,4)
-                    sig=lfield.ion.shielding_factors[2]
-                elseif isequal(l,6)
-                    sig=lfield.ion.shielding_factors[3]
-                end
-                al=(1-sig)*al
-            end
-            Blm=Alm*rl*al*unit_factor
+            al=(1-sig)*al
+            Blm=-Alm*rl*al*unit_factor
             if iszero(Blm)
                 continue
             end
@@ -318,5 +315,44 @@ function calc_cefparams!(lfield::local_env;shielded::Bool=true)
         end
     end
     lfield.cefparams=cefparams
+    return nothing
+end
+
+
+function plot_local_env(lfield::local_env; path="./lfield.gp")
+    open(path, "w") do io
+        println(io, "set terminal wxt enhanced title 'CEF.jl point charges'")
+        println(io, "set xlabel 'x (Å)'")
+        println(io, "set ylabel 'y (Å)'")
+        println(io, "set zlabel 'z (Å)'")
+        println(io, "set view equal xyz")
+        println(io, "splot \\")
+        println(io, "    '-' using 1:2:3 with points pointtype 7 pointsize 1.5 lc rgb 'purple' title 'RE ion', \\")
+        println(io, "    '-' using 1:2:3 with points pointtype 7 pointsize 1.5 lc rgb 'orange' title 'PCs', \\")
+        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'red' lw 2 title 'a', \\")
+        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'green' lw 2 title 'b', \\")
+        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'blue' lw 2 title 'c'")
+
+        # central ion data block
+        println(io, "0.0 0.0 0.0")
+        println(io, "e")
+
+        # charges data block
+        for pc in lfield.cartesian_pointcs
+            println(io, join(pc[1:3], " "))
+        end
+        println(io, "e")
+
+        # basis vectors data block (from origin)
+        aa=lfield.lvecs[:,1]
+        bb=lfield.lvecs[:,2]
+        cc=lfield.lvecs[:,3]
+        println(io, "0 0 0 ", join(aa, " ")*"\ne")
+        println(io, "0 0 0 ", join(bb, " ")*"\ne")
+        println(io, "0 0 0 ", join(cc, " ")*"\ne")
+
+        println(io, "pause -1")
+    end
+    println("Gnuplot .gp file generated: $(path)")
     return nothing
 end
