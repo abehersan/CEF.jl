@@ -25,14 +25,6 @@ function parse_blm(b::String)::Tuple{Int, Int}
 end
 
 
-@doc raw"""
-    get_alm!(bfactors::DataFrame, single_ion::mag_ion)::DataFrame
-
-Factorization of the Stevens B_lm parameters defined as
-B_lm = A_lm * <r^l> * theta_l,
-where <r^l> is the expectation value of the radial wavefunction of the
-4f electron density (tabulated) and theta_l are the Stevens geometrical factors.
-"""
 function get_alm!(bfactors::DataFrame, single_ion::mag_ion; shielded::Bool=true)
     alpha, beta, gamma = single_ion.stevens_factors
     if shielded
