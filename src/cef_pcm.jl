@@ -1,7 +1,8 @@
 Base.@kwdef mutable struct local_env
     ion::mag_ion
     lparams::VEC{6}
-    lvecs::MAT3
+    dlattvecs::MAT3
+    rlattvecs::MAT3
     cartesian_pointcs::Vector{VEC{4}}
     spherical_pointcs::Vector{VEC{4}}
     cefparams::DataFrame
@@ -12,18 +13,23 @@ function Base.show(io::IO, ::MIME"text/plain", pcenv::local_env)
     display(pcenv.ion)
     println()
     printstyled(io,"Lattice parameters [a, b, c, α, β, γ]: $(pcenv.lparams)\n")
-    printstyled(io,"Lattice vector a: $(pcenv.lvecs[:,1])\n")
-    printstyled(io,"Lattice vector b: $(pcenv.lvecs[:,2])\n")
-    printstyled(io,"Lattice vector c: $(pcenv.lvecs[:,3])\n")
     println()
-    printstyled(io, "Cartesian ligand field (Å, Ze):\n\tx\t\ty\t\tz\t\tZ\n")
+    printstyled(io,"Lattice vector a (Å): \t\t$(pcenv.dlattvecs[:,1])\n")
+    printstyled(io,"Lattice vector b (Å): \t\t$(pcenv.dlattvecs[:,2])\n")
+    printstyled(io,"Lattice vector c (Å): \t\t$(pcenv.dlattvecs[:,3])\n")
+    printstyled(io,"Lattice vector a* (1/Å): \t$(pcenv.rlattvecs[:,1])\n")
+    printstyled(io,"Lattice vector b* (1/Å): \t$(pcenv.rlattvecs[:,2])\n")
+    printstyled(io,"Lattice vector c* (1/Å): \t$(pcenv.rlattvecs[:,3])\n")
+    println()
+    println("Point charge coordinates")
+    printstyled(io, "Cartesian (Å, Ze):\n\tx\t\ty\t\tz\t\tZ\n")
     for pc in pcenv.cartesian_pointcs
         x,y,z,Z=pc
         LBL=@sprintf("\t%+3.5f\t%+3.5f\t%+3.5f\t%+3.5f\n",x,y,z,Z)
         printstyled(io,LBL)
     end
     println()
-    printstyled(io, "Spherical ligand field (Å, deg., Ze):\n\tr\t\tθ\t\tϕ\t\tZ\n")
+    printstyled(io, "Spherical (Å, deg., Ze):\n\tr\t\tθ\t\tϕ\t\tZ\n")
     for pc in pcenv.spherical_pointcs
         rr,th,ph,Z=pc
         LBL=@sprintf("\t%+3.5f\t%+3.5f\t%+3.5f\t%+3.5f\n",rr,th*180/pi,ph*180/pi,Z)
@@ -33,13 +39,13 @@ function Base.show(io::IO, ::MIME"text/plain", pcenv::local_env)
 end
 
 
-function ligand_field(ion,lparams,pointcharges;coords::Symbol=:cartesian)::local_env
-    lvecs=lattice_vectors(lparams...)
+function make_pcm(ion,lparams,pointcharges;coords::Symbol=:cartesian)::local_env
+    dlattvecs,rlattvecs=lattice_vectors(lparams...)
     cartesian_pointcs=VEC{4}[]
     spherical_pointcs=VEC{4}[]
     if isequal(coords,:cartesian)
         for pc in pointcharges
-            pccart=lvecs*pc[1:3]
+            pccart=dlattvecs*pc[1:3]
             pcsphe=to_spherical(pccart)
             push!(cartesian_pointcs,VEC{4}(pccart...,pc[end]))
             push!(spherical_pointcs,VEC{4}(pcsphe...,pc[end]))
@@ -57,7 +63,8 @@ function ligand_field(ion,lparams,pointcharges;coords::Symbol=:cartesian)::local
     lenv=local_env(
         ion=ion,
         lparams=VEC{6}(lparams),
-        lvecs=lvecs,
+        dlattvecs=dlattvecs,
+        rlattvecs=rlattvecs,
         cartesian_pointcs=cartesian_pointcs,
         spherical_pointcs=spherical_pointcs,
         cefparams=DataFrame()
@@ -66,20 +73,27 @@ function ligand_field(ion,lparams,pointcharges;coords::Symbol=:cartesian)::local
 end
 
 
-function lattice_vectors(a,b,c,alpha,beta,gamma)::MAT3
+function lattice_vectors(a,b,c,alpha,beta,gamma)
     @assert all(0 < x < 180 for x in (alpha, beta, gamma))
     sgamma=sind(gamma)
     cgamma=cosd(gamma)
     cbeta=cosd(beta)
     calpha=cosd(alpha)
-    v1=[a,0.0,0.0]
-    v2=[b*cgamma,b*sgamma,0]
-    v3x=c*cbeta
-    v3y=(c/sgamma)*(calpha-cbeta*cgamma)
-    v3z=(c/sgamma)*sqrt(sgamma^2-calpha^2-cbeta^2+2*calpha*cbeta*cgamma)
-    v3=[v3x,v3y,v3z]
-    latvecs = MAT3(hcat(v1, v2, v3))
-    return latvecs
+    a1=[a,0.0,0.0]
+    a2=[b*cgamma,b*sgamma,0]
+    a3x=c*cbeta
+    a3y=(c/sgamma)*(calpha-cbeta*cgamma)
+    a3z=(c/sgamma)*sqrt(sgamma^2-calpha^2-cbeta^2+2*calpha*cbeta*cgamma)
+    a3=[a3x,a3y,a3z]
+    dlattvecs=MAT3(hcat(a1,a2,a3))
+
+    VV=dot(a1,cross(a2,a3))
+    b1=(2pi/VV)*cross(a2,a3)
+    b2=(2pi/VV)*cross(a3,a1)
+    b3=(2pi/VV)*cross(a1,a2)
+    rlattvecs=MAT3(hcat(b1,b2,b3))
+
+    return (dlattvecs,rlattvecs)
 end
 
 
@@ -276,29 +290,29 @@ function tesseral_harmonics(l::Int64,m::Int64,x::Real,y::Real,z::Real,r::Real)::
 end
 
 
-function calc_cefparams!(lfield::local_env)
+function calc_cefparams!(pcm::local_env)
     cefparams=DataFrame(B=Float64[],l=Int[],m=Int[])
-    radwav=lfield.ion.rad_wavefunction
-    sfactors=lfield.ion.stevens_factors
+    radwav=pcm.ion.rad_wavefunction
+    sfactors=pcm.ion.stevens_factors
     ahc=1.43996e4
     a0=0.52917721067
     for l in [2,4,6]
         if isequal(l,2)
             rl=radwav[1]
             al=sfactors[1]
-            sig=lfield.ion.shielding_factors[1]
+            sig=pcm.ion.shielding_factors[1]
         elseif isequal(l,4)
             rl=radwav[2]
             al=sfactors[2]
-            sig=lfield.ion.shielding_factors[2]
+            sig=pcm.ion.shielding_factors[2]
         elseif isequal(l,6)
             rl=radwav[3]
             al=sfactors[3]
-            sig=lfield.ion.shielding_factors[3]
+            sig=pcm.ion.shielding_factors[3]
         end
         for m in -l:1:l
             Alm=0.0
-            for pc in lfield.cartesian_pointcs
+            for pc in pcm.cartesian_pointcs
                 x,y,z,Z=pc
                 R=sqrt(x^2+y^2+z^2)
                 Tlm=tesseral_harmonics(l,m,x,y,z,R)
@@ -311,12 +325,12 @@ function calc_cefparams!(lfield::local_env)
             append!(cefparams,DataFrame(:B=>Blm,:l=>l,:m=>m))
         end
     end
-    lfield.cefparams=cefparams
+    pcm.cefparams=cefparams
     return nothing
 end
 
 
-function plot_local_env(lfield::local_env; path="./lfield.gp")
+function plot_pcm(pcm::local_env; path="./pcm.gp")
     open(path, "w") do io
         println(io, "set terminal wxt size 720,720 enhanced title 'CEF.jl point charges'")
         println(io, "set xlabel 'x (Å)'")
@@ -335,15 +349,15 @@ function plot_local_env(lfield::local_env; path="./lfield.gp")
         println(io, "e")
 
         # charges data block
-        for pc in lfield.cartesian_pointcs
+        for pc in pcm.cartesian_pointcs
             println(io, join(pc[1:3], " "))
         end
         println(io, "e")
 
         # basis vectors data block (from origin)
-        aa=lfield.lvecs[:,1]
-        bb=lfield.lvecs[:,2]
-        cc=lfield.lvecs[:,3]
+        aa=pcm.dlattvecs[:,1]
+        bb=pcm.dlattvecs[:,2]
+        cc=pcm.dlattvecs[:,3]
         println(io, "0 0 0 ", join(aa, " ")*"\ne")
         println(io, "0 0 0 ", join(bb, " ")*"\ne")
         println(io, "0 0 0 ", join(cc, " ")*"\ne")

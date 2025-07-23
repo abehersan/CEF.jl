@@ -29,6 +29,7 @@ const muB = 0.057883738013331           # ( meV/T )
 const kB = 0.08617333262                # ( meV/K )
 const NA = 6.02214076e23                # Avogadro constant, ( 1/mol )
 const Rg = 8.314462618                  # Ideal gas constant, ( J/mol/K )
+const CC = 0.07265                      # Cross-section unit factor (barn)
 
 include("./single_ion.jl")
 export single_ion
@@ -39,7 +40,7 @@ export re_hundsrules
 
 include("./cef_pcm.jl")
 export local_env
-export ligand_field
+export make_pcm, plot_pcm
 export lattice_vectors
 export tesseral_harmonics
 export calc_cefparams!
@@ -76,6 +77,8 @@ export cef_susceptibility_powder!
 include("./cef_neutronxsection.jl")
 export cef_neutronxsection_crystal!
 export cef_neutronxsection_powder!
+export calc_Qcart
+export gauss, lorentz
 
 include("./cef_rotation.jl")
 export get_euler_angles

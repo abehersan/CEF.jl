@@ -36,26 +36,26 @@ end
 
 function calc_transitions(ion::mag_ion, i::Int64, Vp::Matrix{ComplexF64})::Vector{VEC{9}}
     SIGMAS = VEC{9}[]
-    @views @inbounds for j in 1:size(Vp, 1)
+    @views @inbounds for j in 1:size(Vp, 1) # adjoint(Jalpha)=Jalpha (alpha in x,y,z)
         sxx = real( dot( Vp[:, i], ion.Jx, Vp[:, j] ) * dot( Vp[:, j], ion.Jx, Vp[:, i] ) )
-        sxy = real( dot( Vp[:, i], ion.Jy, Vp[:, j] ) * dot( Vp[:, j], ion.Jx, Vp[:, i] ) )
-        sxz = real( dot( Vp[:, i], ion.Jz, Vp[:, j] ) * dot( Vp[:, j], ion.Jx, Vp[:, i] ) )
-        syx = real( dot( Vp[:, i], ion.Jx, Vp[:, j] ) * dot( Vp[:, j], ion.Jy, Vp[:, i] ) )
+        sxy = real( dot( Vp[:, i], ion.Jx, Vp[:, j] ) * dot( Vp[:, j], ion.Jy, Vp[:, i] ) )
+        sxz = real( dot( Vp[:, i], ion.Jx, Vp[:, j] ) * dot( Vp[:, j], ion.Jz, Vp[:, i] ) )
+        syx = real( dot( Vp[:, i], ion.Jy, Vp[:, j] ) * dot( Vp[:, j], ion.Jx, Vp[:, i] ) )
         syy = real( dot( Vp[:, i], ion.Jy, Vp[:, j] ) * dot( Vp[:, j], ion.Jy, Vp[:, i] ) )
-        syz = real( dot( Vp[:, i], ion.Jz, Vp[:, j] ) * dot( Vp[:, j], ion.Jy, Vp[:, i] ) )
-        szx = real( dot( Vp[:, i], ion.Jx, Vp[:, j] ) * dot( Vp[:, j], ion.Jz, Vp[:, i] ) )
-        szy = real( dot( Vp[:, i], ion.Jy, Vp[:, j] ) * dot( Vp[:, j], ion.Jz, Vp[:, i] ) )
+        syz = real( dot( Vp[:, i], ion.Jy, Vp[:, j] ) * dot( Vp[:, j], ion.Jz, Vp[:, i] ) )
+        szx = real( dot( Vp[:, i], ion.Jz, Vp[:, j] ) * dot( Vp[:, j], ion.Jx, Vp[:, i] ) )
+        szy = real( dot( Vp[:, i], ion.Jz, Vp[:, j] ) * dot( Vp[:, j], ion.Jy, Vp[:, i] ) )
         szz = real( dot( Vp[:, i], ion.Jz, Vp[:, j] ) * dot( Vp[:, j], ion.Jz, Vp[:, i] ) )
-        push!(SIGMAS, [sxx, sxy, sxz, syx, syy, syz, szx, szy, szz]*ion.gj^2)
+        push!(SIGMAS, [sxx, sxy, sxz, syx, syy, syz, szx, szy, szz])
     end
     return SIGMAS
 end
 
 
 function calc_neutronspectrum_xtal(ion::mag_ion, Ep::Vector{Float64}, Vp::Matrix{ComplexF64}, Qcart::Vector{<:Real}, T::Real)::Vector{VEC{2}}
-    np = population_factor(Ep, T)
-    ffactor = dipolar_formfactor(ion, norm(Qcart))
-    polfactors = reshape(calc_polmatrix(Qcart)', 9)
+    np=population_factor(Ep, T)
+    ffactor=dipolar_formfactor(ion, norm(Qcart))
+    polfactors=reshape(calc_polmatrix(Qcart)', 9)
     NXS = VEC{2}[]
     @inbounds for i in eachindex(Ep)
         if isapprox(np[i], 0.0, atol=PREC)
@@ -63,8 +63,8 @@ function calc_neutronspectrum_xtal(ion::mag_ion, Ep::Vector{Float64}, Vp::Matrix
         end
         sigmas = calc_transitions(ion, i, Vp)
         @inbounds for j in eachindex(Ep)
-            dE = Ep[j] - Ep[i]
-            NINT = dot(polfactors, sigmas[j])*np[i]*abs2(ffactor)
+            dE = -(Ep[i] - Ep[j])
+            NINT = CC*abs2(ffactor*ion.gj)*np[i]*dot(polfactors,sigmas[j])
             if dE < 0.0     # detailed balance
                 NINT *= exp( -abs(dE)/(kB*T) )
             end
@@ -85,8 +85,8 @@ function calc_neutronspectrum_powd(ion::mag_ion, Ep::Vector{Float64}, Vp::Matrix
         end
         sigmas = calc_transitions(ion, i, Vp)
         @inbounds for j in eachindex(Ep)
-            dE = Ep[j] - Ep[i]
-            NINT = sum(sigmas[j])*np[i]*abs2(ffactor)*2.0/3.0
+            dE = -(Ep[i] - Ep[j])
+            NINT = CC*abs2(ffactor*ion.gj)*np[i]*(2.0/3.0)*sum(sigmas[j])
             if dE < 0.0     # detailed balance
                 NINT *= exp( -abs(dE)/(kB*T) )
             end
@@ -109,10 +109,10 @@ function simulate_Escan(NXS::Vector{VEC{2}}, Es::AbstractVector, R::Function=TAS
 end
 
 
-function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; Q::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; Qcart::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
     E, V = eigen(cef_hamiltonian(ion,cefparams,B=B,method=method))
     E .-= minimum(E)
-    NINT = calc_neutronspectrum_xtal(ion,E,V,Q,T)
+    NINT = calc_neutronspectrum_xtal(ion,E,V,Qcart,T)
     EN = dfcalc.EN
     II = round.(simulate_Escan(NINT, EN, resfunc),digits=SDIG)
     dfcalc[!, :I_CALC] = II
@@ -120,11 +120,11 @@ function cef_neutronxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc
 end
 
 
-function cef_neutronxsection_crystal!(lfield::local_env, dfcalc::DataFrame; Q::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
-    if isempty(lfield.cefparams)
-        calc_cefparams!(lfield)
+function cef_neutronxsection_crystal!(pcm::local_env, dfcalc::DataFrame; Qcart::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+    if isempty(pcm.cefparams)
+        calc_cefparams!(pcm)
     end
-    cef_neutronxsection_crystal!(lfield.ion,lfield.cefparams,dfcalc;Q,T,B,resfunc,method)
+    cef_neutronxsection_crystal!(pcm.ion,pcm.cefparams,dfcalc;Qcart,T,B,resfunc,method)
     return nothing
 end
 
@@ -140,10 +140,29 @@ function cef_neutronxsection_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc:
 end
 
 
-function cef_neutronxsection_powder!(lfield::local_env, dfcalc::DataFrame; Q::Real, T::Real=1.0, resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
-    if isempty(lfield.cefparams)
-        calc_cefparams!(lfield)
+function cef_neutronxsection_powder!(pcm::local_env, dfcalc::DataFrame; Q::Real, T::Real=1.0, resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+    if isempty(pcm.cefparams)
+        calc_cefparams!(pcm)
     end
-    cef_neutronxsection_powder!(lfield.ion,lfield.cefparams,dfcalc;Q,T,resfunc,method)
+    cef_neutronxsection_powder!(pcm.ion,pcm.cefparams,dfcalc;Q,T,resfunc,method)
     return nothing
+end
+
+
+function calc_Qcart(Qrlu::Vector{<:Real},pcm::local_env)::Vector{Float64}
+    as=pcm.rlattvecs[:,1]
+    bs=pcm.rlattvecs[:,2]
+    cs=pcm.rlattvecs[:,3]
+    Qcart=Qrlu[1]*as .+ Qrlu[2]*bs .+ Qrlu[3]*cs
+    return Qcart
+end
+
+
+function calc_Qcart(Qrlu::Vector{<:Real},lparams::Vector{<:Real})::Vector{Float64}
+    _,rlattvecs=lattice_vectors(lparams...)
+    as=rlattvecs[:,1]
+    bs=rlattvecs[:,2]
+    cs=rlattvecs[:,3]
+    Qcart=Qrlu[1]*as .+ Qrlu[2]*bs .+ Qrlu[3]*cs
+    return Qcart
 end
