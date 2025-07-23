@@ -1,7 +1,7 @@
 name = "CEF"
 uuid = "a0ebe571-4eea-4bd0-90ac-e9ca257b9c48"
 authors = ["J. A. Hernández"]
-version = "0.1.0-DEV"
+version = "0.2.0-DEV"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
