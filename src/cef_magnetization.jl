@@ -16,15 +16,13 @@ function cef_magnetization_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::
     @eachrow! dfcalc begin
         @newcol :M_CALC::Vector{Float64}
         extfield = [:Bx,:By,:Bz]
-        bhat=extfield/norm(extfield)
         E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
-        E .-= minimum(E) # one still needs to project mu onto B
-        Jxp=ion.Jx*bhat[1]
-        Jyp=ion.Jy*bhat[2]
-        Jzp=ion.Jz*bhat[3]
-        :M_CALC=thermal_average(Ep=E,Vp=V,op=Jxp,T=T,mode=mode)+
-                thermal_average(Ep=E,Vp=V,op=Jyp,T=T,mode=mode)+
-                thermal_average(Ep=E,Vp=V,op=Jzp,T=T,mode=mode)
+        E .-= minimum(E)
+        spinproj=[ion.Jx,ion.Jy,ion.Jz] .* normalize(extfield)
+        mus=[thermal_average(Ep=E,Vp=V,op=spinproj[1],T=T,mode=mode),
+            thermal_average(Ep=E,Vp=V,op=spinproj[2],T=T,mode=mode),
+            thermal_average(Ep=E,Vp=V,op=spinproj[3],T=T,mode=mode)]
+        :M_CALC=norm(mus)
     end
     dfcalc[:,:M_CALC]*=(ion.gj*unit_factor)
     return nothing
