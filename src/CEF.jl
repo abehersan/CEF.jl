@@ -77,6 +77,7 @@ export cef_susceptibility_powder!
 include("./cef_neutronxsection.jl")
 export cef_neutronxsection_crystal!
 export cef_neutronxsection_powder!
+export dipolar_formfactor
 export calc_Qcart
 export gauss, lorentz
 

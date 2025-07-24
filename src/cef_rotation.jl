@@ -16,19 +16,22 @@ function ZYZ_rotmatrix(alpha::Real, beta::Real, gamma::Real)::Matrix{Float64}
 end
 
 
-X_rot(theta::Float64)::Matrix{Float64} = [1 0 0;
-                                          0 cos(theta) -sin(theta);
-                                          0 sin(theta) cos(theta)]
+X_rot(theta::Real)::Matrix{Float64} = [
+                                    1 0 0;
+                                    0 cos(theta) -sin(theta);
+                                    0 sin(theta) cos(theta)]
 
 
-Y_rot(theta::Float64)::Matrix{Float64} = [cos(theta) 0 sin(theta);
-                                          0 1 0;
-                                          -sin(theta) 0 cos(theta)]
+Y_rot(theta::Real)::Matrix{Float64} = [
+                                        cos(theta) 0 sin(theta);
+                                        0 1 0;
+                                        -sin(theta) 0 cos(theta)]
 
 
-Z_rot(theta::Float64)::Matrix{Float64} = [cos(theta) -sin(theta) 0;
-                                          sin(theta) cos(theta) 0;
-                                          0 0 1]
+Z_rot(theta::Real)::Matrix{Float64} = [
+                                        cos(theta) -sin(theta) 0;
+                                        sin(theta) cos(theta) 0;
+                                        0 0 1]
 
 
 function get_euler_angles(v::Vector{<:Real})::Tuple{Float64, Float64, Float64}
