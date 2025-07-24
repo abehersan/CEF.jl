@@ -16,7 +16,7 @@ function cef_magnetization_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::
     @eachrow! dfcalc begin
         @newcol :M_CALC::Vector{Float64}
         extfield = [:Bx,:By,:Bz]
-        bhat=norm(extfield)
+        bhat=extfield/norm(extfield)
         E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
         E .-= minimum(E) # one still needs to project mu onto B
         Jxp=ion.Jx*bhat[1]
