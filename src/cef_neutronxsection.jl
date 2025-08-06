@@ -19,7 +19,7 @@ function dipolar_formfactor(ion::mag_ion, Q::Real)::Float64
     s = Q / 4pi
     ff_j0 = A_j0 * exp(-a_j0*s^2) + B_j0 * exp(-b_j0*s^2) + C_j0 * exp(-c_j0*s^2) + D_j0
     ff_j2 = A_j2*s^2 * exp(-a_j2*s^2) + B_j2*s^2 * exp(-b_j2*s^2) + C_j2*s^2 * exp(-c_j2*s^2) + D_j2*s^2
-    return ff_j0 + ion.C2 * ff_j2
+    return ff_j0 + ((2.0-ion.gj)/ion.gj) * ff_j2
 end
 
 
@@ -52,10 +52,33 @@ function calc_transitions(ion::mag_ion, i::Int64, Vp::Matrix{ComplexF64})::Vecto
 end
 
 
+function calc_polarizedspectrum_xtal(ion::mag_ion, Ep::Vector{Float64}, Vp::Matrix{ComplexF64}, Qcart::Vector{<:Real}, T::Real)::Vector{VEC{10}}
+    np=population_factor(Ep, T)
+    ffactor=dipolar_formfactor(ion, norm(Qcart))
+    polfactors=reshape(calc_polmatrix(Qcart), 9)
+    NXS = VEC{10}[]
+    @inbounds for i in eachindex(Ep)
+        if isapprox(np[i], 0.0, atol=PREC)
+            continue
+        end
+        sigmas = calc_transitions(ion, i, Vp)
+        @inbounds for j in eachindex(Ep)
+            dE = -(Ep[i] - Ep[j])
+            NINT = CC*abs2(ffactor*ion.gj)*np[i]*(polfactors .* sigmas[j])
+            if dE < 0.0     # detailed balance
+                NINT *= exp( -abs(dE)/(kB*T) )
+            end
+            push!(NXS, [dE, NINT...])
+        end
+    end
+    return NXS
+end
+
+
 function calc_neutronspectrum_xtal(ion::mag_ion, Ep::Vector{Float64}, Vp::Matrix{ComplexF64}, Qcart::Vector{<:Real}, T::Real)::Vector{VEC{2}}
     np=population_factor(Ep, T)
     ffactor=dipolar_formfactor(ion, norm(Qcart))
-    polfactors=reshape(calc_polmatrix(Qcart)', 9)
+    polfactors=reshape(calc_polmatrix(Qcart), 9)
     NXS = VEC{2}[]
     @inbounds for i in eachindex(Ep)
         if isapprox(np[i], 0.0, atol=PREC)
@@ -64,7 +87,7 @@ function calc_neutronspectrum_xtal(ion::mag_ion, Ep::Vector{Float64}, Vp::Matrix
         sigmas = calc_transitions(ion, i, Vp)
         @inbounds for j in eachindex(Ep)
             dE = -(Ep[i] - Ep[j])
-            NINT = CC*abs2(ffactor*ion.gj)*np[i]*dot(polfactors,sigmas[j])
+            NINT = CC*abs2(ffactor*ion.gj)*np[i]*dot(polfactors, sigmas[j])
             if dE < 0.0     # detailed balance
                 NINT *= exp( -abs(dE)/(kB*T) )
             end
@@ -106,6 +129,56 @@ function simulate_Escan(NXS::Vector{VEC{2}}, Es::AbstractVector, R::Function=TAS
         end
     end
     return Is
+end
+
+
+function cef_polarizedxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; Qcart::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+    E, V = eigen(cef_hamiltonian(ion,cefparams,B=B,method=method))
+    E .-= minimum(E)
+    NINT = calc_polarizedspectrum_xtal(ion,E,V,Qcart,T)
+    EN = dfcalc.EN
+    Ixx=zeros(length(EN))
+    Ixy=zeros(length(EN))
+    Ixz=zeros(length(EN))
+    Iyx=zeros(length(EN))
+    Iyy=zeros(length(EN))
+    Iyz=zeros(length(EN))
+    Izx=zeros(length(EN))
+    Izy=zeros(length(EN))
+    Izz=zeros(length(EN))
+    @inbounds for i in eachindex(EN)
+        @inbounds for j in eachindex(NINT)
+            E,sxx,sxy,sxz,syx,syy,syz,szx,szy,szz=NINT[j]
+            Ixx[i] += sxx * resfunc(EN[i], E)
+            Ixy[i] += sxy * resfunc(EN[i], E)
+            Ixz[i] += sxz * resfunc(EN[i], E)
+            Iyx[i] += syx * resfunc(EN[i], E)
+            Iyy[i] += syy * resfunc(EN[i], E)
+            Iyz[i] += syz * resfunc(EN[i], E)
+            Izx[i] += szx * resfunc(EN[i], E)
+            Izy[i] += szy * resfunc(EN[i], E)
+            Izz[i] += szz * resfunc(EN[i], E)
+        end
+    end
+    dfcalc[!,:Ixx_CALC]=Ixx
+    dfcalc[!,:Ixy_CALC]=Ixy
+    dfcalc[!,:Ixz_CALC]=Ixz
+    dfcalc[!,:Iyx_CALC]=Iyx
+    dfcalc[!,:Iyy_CALC]=Iyy
+    dfcalc[!,:Iyz_CALC]=Iyz
+    dfcalc[!,:Izx_CALC]=Izx
+    dfcalc[!,:Izy_CALC]=Izy
+    dfcalc[!,:Izz_CALC]=Izz
+    return nothing
+end
+
+
+function cef_polarizedxsection_crystal!(pcm::local_env, dfcalc::DataFrame; Qcart::Vector{<:Real}, T::Real=1.0, B::Vector{<:Real}=[0.0,0.0,0.0], resfunc::Function=TAS_resfunc, method::Symbol=:EO)::Nothing
+    if isempty(pcm.cefparams)
+        calc_cefparams!(pcm)
+    end
+    cef_polarizedxsection_crystal!(pcm.ion,pcm.cefparams,dfcalc;Qcart,T,B,resfunc,method)
+    return nothing
 end
 
 
