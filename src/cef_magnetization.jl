@@ -1,9 +1,9 @@
 function mag_units(units::Symbol)::Float64
-    if isequal(units, :SI)
+    if isequal(units,:SI)
         return 5.5849397            # NA * muB  ( J/T/mol )
-    elseif isequal(units, :CGS)
+    elseif isequal(units,:CGS)
         return 5.5849397*1000.0     # NA * muB  ( emu/mol )
-    elseif isequal(units, :ATOMIC)
+    elseif isequal(units,:ATOMIC)
         return 1.0                  # units of Bohr magneton per mol
     else
         @error "Units $units not understood. Use one of either :SI, :CGS or :ATOMIC"
@@ -15,14 +15,19 @@ function cef_magnetization_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::
     unit_factor=mag_units(units)
     @eachrow! dfcalc begin
         @newcol :M_CALC::Vector{Float64}
-        extfield = [:Bx,:By,:Bz]
-        E, V = eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
+        extfield=[:Bx,:By,:Bz]
+        E,V=eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
         E .-= minimum(E)
-        spinproj=[ion.Jx,ion.Jy,ion.Jz] .* normalize(extfield)
-        mus=[thermal_average(Ep=E,Vp=V,op=spinproj[1],T=T,mode=mode),
-            thermal_average(Ep=E,Vp=V,op=spinproj[2],T=T,mode=mode),
-            thermal_average(Ep=E,Vp=V,op=spinproj[3],T=T,mode=mode)]
-        :M_CALC=norm(mus)
+        Bnorm=extfield/sqrt(dot(extfield,extfield))
+        spinops=[ion.Jx,ion.Jy,ion.Jz]
+        mu=0.0
+        for i in eachindex(Bnorm)
+            if iszero(Bnorm[i])
+                continue
+            end
+            mu+=thermal_average(Ep=E,Vp=V,op=spinops[i],T=T,mode=mode)
+        end
+        :M_CALC=mu
     end
     dfcalc[:,:M_CALC]*=(ion.gj*unit_factor)
     return nothing
