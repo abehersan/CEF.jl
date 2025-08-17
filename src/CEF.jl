@@ -78,7 +78,7 @@ include("./cef_neutronxsection.jl")
 export cef_neutronxsection_crystal!
 export cef_neutronxsection_powder!
 export dipolar_formfactor
-export calc_Qcart
+export calc_Qcart, calc_polmatrix
 export gauss, lorentz
 
 include("./cef_rotation.jl")

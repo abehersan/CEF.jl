@@ -13,23 +13,33 @@ function lorentz(; x::Real, A::Real, mu::Real, gamma::Real)::Float64
 end
 
 
-function dipolar_formfactor(ion::mag_ion, Q::Real)::Float64
-    A_j0, a_j0, B_j0, b_j0, C_j0, c_j0, D_j0 = ion.ff_coeff_j0
-    A_j2, a_j2, B_j2, b_j2, C_j2, c_j2, D_j2 = ion.ff_coeff_j2
+function dipolar_formfactor(ff_coeff_j0,ff_coeff_j2,gj::Real,Q::Real)::Float64
+    A_j0, a_j0, B_j0, b_j0, C_j0, c_j0, D_j0 = ff_coeff_j0
+    A_j2, a_j2, B_j2, b_j2, C_j2, c_j2, D_j2 = ff_coeff_j2
     s = Q / 4pi
     ff_j0 = A_j0 * exp(-a_j0*s^2) + B_j0 * exp(-b_j0*s^2) + C_j0 * exp(-c_j0*s^2) + D_j0
     ff_j2 = A_j2*s^2 * exp(-a_j2*s^2) + B_j2*s^2 * exp(-b_j2*s^2) + C_j2*s^2 * exp(-c_j2*s^2) + D_j2*s^2
-    return ff_j0 + ((2.0-ion.gj)/ion.gj) * ff_j2
+    return ff_j0 + ((2.0-gj)/gj) * ff_j2
+end
+
+
+function dipolar_formfactor(ion::mag_ion, Q::Real)::Float64
+    return dipolar_formfactor(ion.ff_coeff_j0,ion.ff_coeff_j2,ion.gj,Q)
 end
 
 
 function calc_polmatrix(Qcart::Vector{Float64})::Matrix{Float64}
-    polmat = Matrix{Float64}(undef, (3, 3))
-    Q = normalize(Qcart)
-    for I in CartesianIndices(polmat)
-        a, b = Tuple(I)
-        polmat[I] = (isequal(a, b)*1.0 - Q[a]*Q[b])
-    end
+    polmat=zeros(Float64,(3,3))
+    Qhat=Qcart/sqrt(dot(Qcart,Qcart))
+    polmat[1,1]=1.0-Qhat[1]*Qhat[1]
+    polmat[1,2]=0.0-Qhat[1]*Qhat[2]
+    polmat[1,3]=0.0-Qhat[1]*Qhat[3]
+    polmat[2,1]=0.0-Qhat[2]*Qhat[1]
+    polmat[2,2]=1.0-Qhat[2]*Qhat[2]
+    polmat[2,3]=0.0-Qhat[2]*Qhat[3]
+    polmat[3,1]=0.0-Qhat[3]*Qhat[1]
+    polmat[3,2]=0.0-Qhat[3]*Qhat[2]
+    polmat[3,3]=1.0-Qhat[3]*Qhat[3]
     return polmat
 end
 
@@ -149,15 +159,15 @@ function cef_polarizedxsection_crystal!(ion::mag_ion, cefparams::DataFrame, dfca
     @inbounds for i in eachindex(EN)
         @inbounds for j in eachindex(NINT)
             E,sxx,sxy,sxz,syx,syy,syz,szx,szy,szz=NINT[j]
-            Ixx[i] += sxx * resfunc(EN[i], E)
-            Ixy[i] += sxy * resfunc(EN[i], E)
-            Ixz[i] += sxz * resfunc(EN[i], E)
-            Iyx[i] += syx * resfunc(EN[i], E)
-            Iyy[i] += syy * resfunc(EN[i], E)
-            Iyz[i] += syz * resfunc(EN[i], E)
-            Izx[i] += szx * resfunc(EN[i], E)
-            Izy[i] += szy * resfunc(EN[i], E)
-            Izz[i] += szz * resfunc(EN[i], E)
+            Ixx[i]+=sxx*resfunc(EN[i],E)
+            Ixy[i]+=sxy*resfunc(EN[i],E)
+            Ixz[i]+=sxz*resfunc(EN[i],E)
+            Iyx[i]+=syx*resfunc(EN[i],E)
+            Iyy[i]+=syy*resfunc(EN[i],E)
+            Iyz[i]+=syz*resfunc(EN[i],E)
+            Izx[i]+=szx*resfunc(EN[i],E)
+            Izy[i]+=szy*resfunc(EN[i],E)
+            Izz[i]+=szz*resfunc(EN[i],E)
         end
     end
     dfcalc[!,:Ixx_CALC]=Ixx

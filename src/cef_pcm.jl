@@ -119,6 +119,45 @@ function to_cartesian(sphvec)::VEC3
 end
 
 
+function plot_pcm(pcm::local_env; path="./pcm.gp")
+    open(path, "w") do io
+        println(io, "set terminal wxt size 720,720 enhanced title 'CEF.jl point charges'")
+        println(io, "set xlabel 'x (Å)'")
+        println(io, "set ylabel 'y (Å)'")
+        println(io, "set zlabel 'z (Å)'")
+        println(io, "set view equal xyz")
+        println(io, "splot \\")
+        println(io, "    '-' using 1:2:3 with points pointtype 7 pointsize 1.5 lc rgb 'purple' title 'RE ion', \\")
+        println(io, "    '-' using 1:2:3 with points pointtype 7 pointsize 1.5 lc rgb 'orange' title 'PCs', \\")
+        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'red' lw 2 title 'a', \\")
+        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'green' lw 2 title 'b', \\")
+        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'blue' lw 2 title 'c'")
+
+        # central ion data block
+        println(io, "0.0 0.0 0.0")
+        println(io, "e")
+
+        # charges data block
+        for pc in pcm.cartesian_pointcs
+            println(io, join(pc[1:3], " "))
+        end
+        println(io, "e")
+
+        # basis vectors data block (from origin)
+        aa=pcm.dlattvecs[:,1]
+        bb=pcm.dlattvecs[:,2]
+        cc=pcm.dlattvecs[:,3]
+        println(io, "0 0 0 ", join(aa, " ")*"\ne")
+        println(io, "0 0 0 ", join(bb, " ")*"\ne")
+        println(io, "0 0 0 ", join(cc, " ")*"\ne")
+
+        println(io, "pause -1")
+    end
+    println("Gnuplot .gp file generated: $(path)")
+    return nothing
+end
+
+
 function tesseral_harmonics(l::Int64,m::Int64,x::Real,y::Real,z::Real,r::Real)::Real
     if isequal(l,0)
         T00=+sqrt(1/(4*pi))
@@ -326,44 +365,5 @@ function calc_cefparams!(pcm::local_env)
         end
     end
     pcm.cefparams=cefparams
-    return nothing
-end
-
-
-function plot_pcm(pcm::local_env; path="./pcm.gp")
-    open(path, "w") do io
-        println(io, "set terminal wxt size 720,720 enhanced title 'CEF.jl point charges'")
-        println(io, "set xlabel 'x (Å)'")
-        println(io, "set ylabel 'y (Å)'")
-        println(io, "set zlabel 'z (Å)'")
-        println(io, "set view equal xyz")
-        println(io, "splot \\")
-        println(io, "    '-' using 1:2:3 with points pointtype 7 pointsize 1.5 lc rgb 'purple' title 'RE ion', \\")
-        println(io, "    '-' using 1:2:3 with points pointtype 7 pointsize 1.5 lc rgb 'orange' title 'PCs', \\")
-        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'red' lw 2 title 'a', \\")
-        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'green' lw 2 title 'b', \\")
-        println(io, "    '-' using 1:2:3:4:5:6 with vectors head filled lc rgb 'blue' lw 2 title 'c'")
-
-        # central ion data block
-        println(io, "0.0 0.0 0.0")
-        println(io, "e")
-
-        # charges data block
-        for pc in pcm.cartesian_pointcs
-            println(io, join(pc[1:3], " "))
-        end
-        println(io, "e")
-
-        # basis vectors data block (from origin)
-        aa=pcm.dlattvecs[:,1]
-        bb=pcm.dlattvecs[:,2]
-        cc=pcm.dlattvecs[:,3]
-        println(io, "0 0 0 ", join(aa, " ")*"\ne")
-        println(io, "0 0 0 ", join(bb, " ")*"\ne")
-        println(io, "0 0 0 ", join(cc, " ")*"\ne")
-
-        println(io, "pause -1")
-    end
-    println("Gnuplot .gp file generated: $(path)")
     return nothing
 end

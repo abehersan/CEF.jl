@@ -18,16 +18,10 @@ function cef_magnetization_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::
         extfield=[:Bx,:By,:Bz]
         E,V=eigen(cef_hamiltonian(ion,cefparams;B=extfield,method=method))
         E .-= minimum(E)
-        Bnorm=extfield/sqrt(dot(extfield,extfield))
-        spinops=[ion.Jx,ion.Jy,ion.Jz]
-        mu=0.0
-        for i in eachindex(Bnorm)
-            if iszero(Bnorm[i])
-                continue
-            end
-            mu+=thermal_average(Ep=E,Vp=V,op=spinops[i],T=T,mode=mode)
-        end
-        :M_CALC=mu
+        mux=thermal_average(Ep=E,Vp=V,op=ion.Jx,T=T,mode=mode)
+        muy=thermal_average(Ep=E,Vp=V,op=ion.Jy,T=T,mode=mode)
+        muz=thermal_average(Ep=E,Vp=V,op=ion.Jz,T=T,mode=mode)
+        :M_CALC=mux+muy+muz
     end
     dfcalc[:,:M_CALC]*=(ion.gj*unit_factor)
     return nothing
@@ -47,19 +41,19 @@ function cef_magnetization_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::D
     unit_factor = mag_units(units)
     @eachrow! dfcalc begin
         @newcol :M_CALC::Vector{Float64}
-        E, V = eigen(cef_hamiltonian(ion,cefparams; B=[:B,0.0,0.0],method=method))
+        E,V=eigen(cef_hamiltonian(ion,cefparams; B=[:B,0.0,0.0],method=method))
         E .-= minimum(E)
-        MX = thermal_average(Ep=E,Vp=V,op=ion.Jx,T=T,mode=mode)
+        mux=thermal_average(Ep=E,Vp=V,op=ion.Jx,T=T,mode=mode)
 
-        E, V = eigen(cef_hamiltonian(ion,cefparams; B=[0.0,:B,0.0],method=method))
+        E,V=eigen(cef_hamiltonian(ion,cefparams; B=[0.0,:B,0.0],method=method))
         E .-= minimum(E)
-        MY = thermal_average(Ep=E,Vp=V,op=ion.Jy,T=T,mode=mode)
+        muy=thermal_average(Ep=E,Vp=V,op=ion.Jy,T=T,mode=mode)
 
-        E, V = eigen(cef_hamiltonian(ion,cefparams; B=[0.0,0.0,:B],method=method))
+        E,V=eigen(cef_hamiltonian(ion,cefparams; B=[0.0,0.0,:B],method=method))
         E .-= minimum(E)
-        MZ = thermal_average(Ep=E,Vp=V,op=ion.Jz,T=T,mode=mode)
+        muz=thermal_average(Ep=E,Vp=V,op=ion.Jz,T=T,mode=mode)
 
-        :M_CALC=sqrt(MX^2 + MY^2 + MZ^2)
+        :M_CALC=sqrt(mux^2 + muy^2 + muz^2)
     end
     dfcalc[:,:M_CALC]*=(ion.gj*unit_factor)
     return nothing
