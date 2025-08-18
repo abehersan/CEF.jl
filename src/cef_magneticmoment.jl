@@ -67,7 +67,7 @@ function cef_magneticmoment_powder!(ion::mag_ion,cefparams::DataFrame,dfcalc::Da
         if iszero(NJ)
             :M_CALC=sqrt(mux^2 + muy^2 + muz^2)
         else
-            bmf=(NJ/(ion.gj*muB)^2)#*[mux,muy,muz] # molecular field
+            bmf=(NJ/(ion.gj*muB)^2)*norm([mux,muy,muz]) # molecular field
             E,V=eigen(cef_hamiltonian(ion,cefparams; B=[:B+bmf*mux,0.0,0.0],method=method))
             E .-= minimum(E)
             muxp=thermal_average(Ep=E,Vp=V,op=ion.Jx,T=T,mode=mode)
