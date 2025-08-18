@@ -44,7 +44,7 @@ function calc_chialphaalpha(; op_alpha::Matrix{ComplexF64}, Ep::Vector{Float64},
 end
 
 
-function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; B::Vector{<:Real}, units::Symbol=:CGS, method::Symbol=:O, mode::Function=real)::Nothing
+function cef_susceptibility_crystal!(ion::mag_ion,cefparams::DataFrame,dfcalc::DataFrame;B::Vector{<:Real},lmbda::Real=0.0,units::Symbol=:CGS,method::Symbol=:O,mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     spin_ops = [ion.Jx,ion.Jy,ion.Jz]
     spin_proj = spin_ops .* normalize(B)
@@ -52,25 +52,30 @@ function cef_susceptibility_crystal!(ion::mag_ion, cefparams::DataFrame, dfcalc:
     E .-= minimum(E)
     @eachrow! dfcalc begin
         @newcol :CHI_CALC::Vector{Float64}
-        :CHI_CALC=calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[1],T=:T,mode=mode)+
-                  calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[2],T=:T,mode=mode)+
-                  calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[3],T=:T,mode=mode)
+        chi0=calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[1],T=:T,mode=mode)+
+            calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[2],T=:T,mode=mode)+
+            calc_chialphaalpha(Ep=E,Vp=V,op_alpha=spin_proj[3],T=:T,mode=mode)
+        if iszero(lmbda)
+            :CHI_CALC=chi0
+        else
+            :CHI_CALC=chi0/(1.0-chi0*lmbda)
+        end
     end
     dfcalc[:,:CHI_CALC]*=ion.gj^2*unit_factor
     return nothing
 end
 
 
-function cef_susceptibility_crystal!(lfield::local_env, dfcalc::DataFrame; B::Vector{<:Real}, units::Symbol=:CGS, method::Symbol=:O, mode::Function=real)::Nothing
+function cef_susceptibility_crystal!(lfield::local_env, dfcalc::DataFrame;B::Vector{<:Real},lmbda::Real=0.0,units::Symbol=:CGS,method::Symbol=:O,mode::Function=real)::Nothing
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
-    cef_susceptibility_crystal!(lfield.ion,lfield.cefparams,dfcalc;B,units,method,mode)
+    cef_susceptibility_crystal!(lfield.ion,lfield.cefparams,dfcalc;B,lmbda,units,method,mode)
     return nothing
 end
 
 
-function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:O, mode::Function=real)::Nothing
+function cef_susceptibility_powder!(ion::mag_ion,cefparams::DataFrame,dfcalc::DataFrame;lmbda::Real=0.0,units::Symbol=:CGS,method::Symbol=:O,mode::Function=real)::Nothing
     unit_factor = chi_units(units)
     E, V = eigen(cef_hamiltonian(ion,cefparams;method=method))
     E .-= minimum(E)
@@ -79,17 +84,23 @@ function cef_susceptibility_powder!(ion::mag_ion, cefparams::DataFrame, dfcalc::
         chixx = calc_chialphaalpha(op_alpha=ion.Jx,Ep=E,Vp=V,T=:T,mode=mode)
         chiyy = calc_chialphaalpha(op_alpha=ion.Jy,Ep=E,Vp=V,T=:T,mode=mode)
         chizz = calc_chialphaalpha(op_alpha=ion.Jz,Ep=E,Vp=V,T=:T,mode=mode)
-        :CHI_CALC=(chixx+chiyy+chizz)/3.0
+        if iszero(lmbda)
+            chitot=(chixx+chiyy+chizz)/3.0
+        else
+            chi0=(chixx+chiyy+chizz)/3.0
+            chitot=chi0/(1.0 - chi0*lmbda)
+        end
+        :CHI_CALC=chitot
     end
     dfcalc[:,:CHI_CALC]*=ion.gj^2*unit_factor
     return nothing
 end
 
 
-function cef_susceptibility_powder!(lfield::local_env, dfcalc::DataFrame; units::Symbol=:CGS, method::Symbol=:O, mode::Function=real)::Nothing
+function cef_susceptibility_powder!(lfield::local_env,dfcalc::DataFrame;lmbda::Real=0.0,units::Symbol=:CGS,method::Symbol=:O,mode::Function=real)::Nothing
     if isempty(lfield.cefparams)
         calc_cefparams!(lfield)
     end
-    cef_susceptibility_powder!(lfield.ion,lfield.cefparams,dfcalc;units,method,mode)
+    cef_susceptibility_powder!(lfield.ion,lfield.cefparams,dfcalc;lmbda,units,method,mode)
     return nothing
 end

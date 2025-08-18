@@ -3,6 +3,8 @@ Base.@kwdef mutable struct local_env
     lparams::VEC{6}
     dlattvecs::MAT3
     rlattvecs::MAT3
+    Vr::Real
+    Vd::Real
     cartesian_pointcs::Vector{VEC{4}}
     spherical_pointcs::Vector{VEC{4}}
     cefparams::DataFrame
@@ -65,6 +67,8 @@ function make_pcm(ion,lparams,pointcharges;coords::Symbol=:cartesian)::local_env
         lparams=VEC{6}(lparams),
         dlattvecs=dlattvecs,
         rlattvecs=rlattvecs,
+        Vd=abs(dot(dlattvecs[:,1],cross(dlattvecs[:,2],dlattvecs[:,3]))),
+        Vr=abs(dot(rlattvecs[:,1],cross(rlattvecs[:,2],rlattvecs[:,3]))),
         cartesian_pointcs=cartesian_pointcs,
         spherical_pointcs=spherical_pointcs,
         cefparams=DataFrame()
