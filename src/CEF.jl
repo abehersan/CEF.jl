@@ -66,9 +66,9 @@ include("./cef_entropy.jl")
 export cef_entropy!
 export cef_entropy_speclevels!
 
-include("./cef_magnetization.jl")
-export cef_magnetization_crystal!
-export cef_magnetization_powder!
+include("./cef_magneticmoment.jl")
+export cef_magneticmoment_crystal!
+export cef_magneticmoment_powder!
 
 include("./cef_susceptibility.jl")
 export cef_susceptibility_crystal!
